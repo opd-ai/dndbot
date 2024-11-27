@@ -106,6 +106,9 @@ func getCopyrightRemovalPrompt() string {
 	Do not ask for confirmation in any way, just output the complete adventure.
 	This is essential.
 
+	If no revision is made, do not report any additional information.
+	Just output the original adventure.
+
 	Provide a complete revised and edited version of the entire adventure.
 	Preserve the existing response in beautifully formatted markdown with symbols and emoji, with clear sections.
 	The author is anonymous.
