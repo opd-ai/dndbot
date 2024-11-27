@@ -40,7 +40,6 @@ func (c *ClaudeClient) SendMessage(systemPrompt, userPrompt string) (string, err
 			}),
 		},
 	)
-
 	if err != nil {
 		return "", fmt.Errorf("claude api error: %w", err)
 	}

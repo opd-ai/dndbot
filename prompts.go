@@ -19,6 +19,10 @@ func getOnePageDungeonPrompt() string {
 	The author is anonymous.
 	No disclaimers or credits are necessary.
 	Everything is Creative Commons Zero with no attribution.
+
+	Do this without asking for confirmation or direction.
+	Do not ask for confirmation in any way, just output the complete adventure.
+	This is essential.
 	
 	Episode should also include a unique side-plot.
 	Prefer a relatable sense of realism.
@@ -50,6 +54,10 @@ func getExpandedAdventurePrompt() string {
 	Fantasy is acceptable, but avoiding material circumstances is not.
 	Avoid overt flights of fancy.
 	Maintain verisimiliture throughout the story.
+
+	Do this without asking for confirmation or direction.
+	Do not ask for confirmation in any way, just output the complete adventure.
+	This is essential.
 
 	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
 	Do this until you reach the full 8 pages minimum.
@@ -94,7 +102,7 @@ func getCopyrightRemovalPrompt() string {
 	6. Output the complete adventure with revisions, do not provide suggestions.
 
 	Even if no revisions need to be made, output the complete original adventure.
-	Do this without asking for c.onfirmation or direction.
+	Do this without asking for confirmation or direction.
 	Do not ask for confirmation in any way, just output the complete adventure.
 	This is essential.
 
