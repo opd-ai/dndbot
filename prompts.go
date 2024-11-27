@@ -53,8 +53,10 @@ func getExpandedAdventurePrompt() string {
 
 	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
 	Do this until you reach the full 8 pages minimum.
+	At the top of each page, add [Page Number] of [Total pages].
 	At the bottom of each page except the final page, add [continued on next page].
 	On the last page, add [final page].
+	Never refer to yourself.
 	`
 }
 
