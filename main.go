@@ -6,12 +6,13 @@ import (
 	"os"
 )
 
-var directory = flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
-var setting = flag.String("setting", "SETTING.md", "a file containing the details of the campaign setting")
+var (
+	directory = flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
+	setting   = flag.String("setting", "SETTING.md", "a file containing the details of the campaign setting")
+)
 
 // main.go
 func main() {
-
 	flag.Parse()
 	config := Config{
 		APIKey:     os.Getenv("CLAUDE_API_KEY"),
@@ -25,13 +26,22 @@ func main() {
 	}
 
 	client := NewClaudeClient(config.APIKey)
-
-	prompt := os.Args[1]
-	if prompt == "" {
-		fmt.Println("Please provide a narrative prompt")
-		os.Exit(1)
+	var prompt string
+	if len(os.Args) == 0 {
+		var err error
+		promptb, err := os.ReadFile("PROMPT.md")
+		if err != nil {
+			fmt.Println("Please provide a narrative prompt or PROMPT.md")
+			os.Exit(1)
+		}
+		prompt = string(promptb)
+	} else {
+		prompt = os.Args[1]
+		if prompt == "" {
+			fmt.Println("Please provide a narrative prompt")
+			os.Exit(1)
+		}
 	}
-
 	// Process the adventure
 	adventure, err := generateTableOfContents(client, prompt)
 	if err != nil {
