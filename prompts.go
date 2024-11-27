@@ -18,7 +18,14 @@ func getOnePageDungeonPrompt() string {
     Format the response in markdown.
 	The author is anonymous.
 	No disclaimers or credits are necessary.
-	Everything is Creative Commons Zero with no attribution.`
+	Everything is Creative Commons Zero with no attribution.
+	
+	Episode should also include a unique side-plot.
+	Prefer a relatable sense of realism.
+	Fantasy is acceptable, but avoiding material circumstances is not.
+	Avoid overt flights of fancy.
+	Maintain verisimiliture throughout the story.
+	`
 }
 
 func getExpandedAdventurePrompt() string {
@@ -36,6 +43,12 @@ func getExpandedAdventurePrompt() string {
 	The author is anonymous.
 	No disclaimers or credits are necessary.
 	Everything is Creative Commons Zero with no attribution.
+
+	Episode should also include a unique side-plot.
+	Prefer a relatable sense of realism.
+	Fantasy is acceptable, but avoiding material circumstances is not.
+	Avoid overt flights of fancy.
+	Maintain verisimiliture throughout the story.
 
 	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
 	Do this until you reach the full 8 pages minimum.
