@@ -33,10 +33,10 @@ func generateTableOfContents(client *ClaudeClient, prompt string) (Adventure, er
 	Follow this example format exactly for each consecutive episode:`
 	systemPrompt += "```\n"
 	systemPrompt += `## Episode: Number - Episode Title
-Summary: 8 sentence summary of the adventure, setting, plot, and mood.
-Tagline: Catchy one-sentence quote about the adventure
-Location: Location name, 2-3 sentence location description
-Characters: Character One, Character Two, Characther Three...
+Summary: 8 sentence summary of the adventure, setting, plot, and mood. (All one line)
+Tagline: Catchy one-sentence quote about the adventure (All one line)
+Location: Location name, 2-3 sentence location description (All one line)
+Characters: Character One, Character Two, Characther Three... (All one line)
 
 `
 	systemPrompt += "```\n"
