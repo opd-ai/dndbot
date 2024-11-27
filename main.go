@@ -1,15 +1,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 )
 
 // main.go
 func main() {
+	directory := flag.String("dirname", "adventure", "Name of the output directory for the adventure")
+	flag.Parse()
 	config := Config{
 		APIKey:     os.Getenv("CLAUDE_API_KEY"),
-		OutputDir:  "adventures",
+		OutputDir:  *directory,
 		MaxRetries: 3,
 	}
 
