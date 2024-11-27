@@ -15,7 +15,7 @@ func getOnePageDungeonPrompt() string {
     6. Include any relevant traps or puzzles
     7. Provide monster statistics in abbreviated format
 	8. Game-system agnostic
-    Format the response in beautifully formatted markdown with symbols and emoji.
+    Format the response in beautifully structured markdown with symbols and emoji.
 	The author is anonymous.
 	No disclaimers or credits are necessary.
 	Everything is Creative Commons Zero with no attribution.
@@ -39,7 +39,7 @@ func getExpandedAdventurePrompt() string {
     7. Alternative endings
     8. Scaling options for different party levels
 	9. Game-system agnostic
-    Format the response in beautifully formatted markdown with symbols and emoji, with clear sections.
+    Format the response in beautifully structured markdown with symbols and emoji, with clear sections.
 	Longer sections should use completete sentences and paragraphs.
 	The author is anonymous.
 	No disclaimers or credits are necessary.
