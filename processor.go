@@ -40,6 +40,7 @@ Characters: Character One, Character Two, Characther Three... (All one line)
 
 `
 	systemPrompt += "```\n"
+	systemPrompt += getSettingDetails()
 
 	response, err := client.SendMessage(systemPrompt, prompt)
 	if err != nil {
@@ -67,7 +68,7 @@ func generateOnePageDungeons(client *ClaudeClient, adventure *Adventure) error {
 			prompt += fmt.Sprintf("There was a previous adventure in this series. Here is summary of the previous adventure:\n%s\n",
 				adventure.Episodes[i-1].Text())
 		}
-		prompt += fmt.Sprintf("The original prompt provided by a human for this story arc was: \n%s\n", adventure.OriginalPrompt)
+		prompt += fmt.Sprintf("The original prompt provided by a human for this story arc was: \n%s\n", adventure.OriginalPrompt) + getSettingDetails()
 
 		response, err := client.SendMessage(getOnePageDungeonPrompt(), prompt)
 		if err != nil {

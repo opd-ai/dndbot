@@ -2,8 +2,27 @@
 package main
 
 import (
+	"os"
 	"strings"
 )
+
+func getSettingDetails() string {
+	val := `
+	This adventure takes place in an established campaign setting.
+	For details about the campaign setting, refer to the following details.
+	Focus on writing the story of the adventure(above) in the provided setting(below)
+	`
+	val += "```\n"
+	val += "BEGIN SETTING DETAILS\n"
+	bytes, err := os.ReadFile(*setting)
+	if err != nil {
+		return ""
+	}
+	val += string(bytes)
+	val += "END SETTING DETAILS\n"
+	val += "```\n"
+	return val
+}
 
 func getOnePageDungeonPrompt() string {
 	return `Convert this episode summary into a one-page dungeon format(about 80 lines) following these guidelines:

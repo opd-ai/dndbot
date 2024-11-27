@@ -6,9 +6,12 @@ import (
 	"os"
 )
 
+var directory = flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
+var setting = flag.String("setting", "SETTING.md", "a file containing the details of the campaign setting")
+
 // main.go
 func main() {
-	directory := flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
+
 	flag.Parse()
 	config := Config{
 		APIKey:     os.Getenv("CLAUDE_API_KEY"),
