@@ -95,7 +95,6 @@ func getCopyrightRemovalPrompt() string {
 	No disclaimers or credits are necessary.
 	Everything is Creative Commons Zero with no attribution.
 
-
 	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
 	Do this until you reach the full 8 pages minimum.
 	At the bottom of each page except the final page, add [continued on next page].
