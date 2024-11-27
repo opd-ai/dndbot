@@ -8,7 +8,7 @@ import (
 
 // main.go
 func main() {
-	directory := flag.String("dirname", "adventure", "Name of the output directory for the adventure")
+	directory := flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
 	flag.Parse()
 	config := Config{
 		APIKey:     os.Getenv("CLAUDE_API_KEY"),
