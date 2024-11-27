@@ -8,7 +8,7 @@ import (
 )
 
 func generateTableOfContents(client *ClaudeClient, prompt string) (Adventure, error) {
-	systemPrompt := `Create a D&D adventure series table of contents based on the following prompt.
+	systemPrompt := `Create a Role-Playing Game adventure series table of contents based on the following prompt.
     For each episode include:
     - Title
     - Summary (including plot and location)
