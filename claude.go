@@ -1,74 +1,54 @@
-// claude_client.go
+// claude.go
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"time"
+
+	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
+type ClaudeClient struct {
+	client *anthropic.Client
+}
+
 func NewClaudeClient(apiKey string) *ClaudeClient {
+	client := anthropic.NewClient(
+		option.WithAPIKey(apiKey),
+	)
 	return &ClaudeClient{
-		apiKey: apiKey,
-		httpClient: &http.Client{
-			Timeout: time.Second * 30,
-		},
+		client: client,
 	}
 }
 
 func (c *ClaudeClient) SendMessage(systemPrompt, userPrompt string) (string, error) {
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: systemPrompt,
+	ctx := context.Background()
+
+	message, err := c.client.Messages.New(
+		ctx,
+		anthropic.MessageNewParams{
+			Model:     anthropic.F(anthropic.ModelClaude3_5SonnetLatest),
+			MaxTokens: anthropic.F(int64(4096)),
+			System: anthropic.F([]anthropic.TextBlockParam{
+				anthropic.NewTextBlock(systemPrompt),
+			}),
+			Messages: anthropic.F([]anthropic.MessageParam{
+				anthropic.NewUserMessage(
+					anthropic.NewTextBlock(userPrompt),
+				),
+			}),
 		},
-		{
-			Role:    "user",
-			Content: userPrompt,
-		},
-	}
+	)
 
-	reqBody := ClaudeRequest{
-		Model:    "claude-2",
-		Messages: messages,
-	}
-
-	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", fmt.Errorf("marshaling request: %w", err)
+		return "", fmt.Errorf("claude api error: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonBody))
-	if err != nil {
-		return "", fmt.Errorf("creating request: %w", err)
+	if len(message.Content) == 0 {
+		return "", fmt.Errorf("empty response from claude")
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("sending request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("reading response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("API error: %s", string(body))
-	}
-
-	var response ClaudeResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return "", fmt.Errorf("unmarshaling response: %w", err)
-	}
-
-	return response.Content, nil
+	// Extract text from the first content block
+	return message.Content[0].Text, nil
 }

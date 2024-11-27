@@ -1,9 +1,7 @@
 // main.go
 package main
 
-import (
-	"net/http"
-)
+import "strings"
 
 // Configuration struct for API and other settings
 type Config struct {
@@ -32,17 +30,20 @@ type Episode struct {
 	Illustrations  []IllustrationPrompt
 }
 
+func (e *Episode) Text() string {
+	val := "## " + e.Title + "\n"
+	val += "Summary" + e.Summary + "\n"
+	val += "Tagline: " + e.Tagline + "\n"
+	val += "Location: " + e.Location + "\n"
+	val += "Characters: " + strings.Join(e.Characters, ",") + "\n"
+	return val
+}
+
 // IllustrationPrompt represents a Stable Diffusion prompt
 type IllustrationPrompt struct {
 	Description string
 	Style       string
 	IsMap       bool
-}
-
-// ClaudeClient handles API communication
-type ClaudeClient struct {
-	apiKey     string
-	httpClient *http.Client
 }
 
 // ClaudeRequest represents the API request structure

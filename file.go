@@ -11,7 +11,7 @@ import (
 func saveToFiles(adventure *Adventure, outputDir string) error {
 	for i, episode := range adventure.Episodes {
 		// Create episode directory
-		episodeDir := filepath.Join(outputDir, fmt.Sprintf("Episode-%02d", i+1))
+		episodeDir := filepath.Join(outputDir, fmt.Sprintf("%02d_Episode", i+1))
 		if err := os.MkdirAll(episodeDir, 0755); err != nil {
 			return fmt.Errorf("creating episode directory: %w", err)
 		}
@@ -24,7 +24,7 @@ func saveToFiles(adventure *Adventure, outputDir string) error {
 
 		// Save illustration prompts
 		for j, illus := range episode.Illustrations {
-			illusPath := filepath.Join(episodeDir, fmt.Sprintf("Illustration-%02d.md", j+1))
+			illusPath := filepath.Join(episodeDir, fmt.Sprintf("Caption_%02d.md", j+1))
 			content := fmt.Sprintf("Description: %s\nStyle: %s\nIs Map: %v",
 				illus.Description, illus.Style, illus.IsMap)
 			if err := ioutil.WriteFile(illusPath, []byte(content), 0644); err != nil {

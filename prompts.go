@@ -6,7 +6,7 @@ import (
 )
 
 func getOnePageDungeonPrompt() string {
-	return `Convert this episode summary into a one-page dungeon format following these guidelines:
+	return `Convert this episode summary into a one-page dungeon format(about 80 lines) following these guidelines:
     1. Start with a clear location description
     2. List key NPCs and their motivations
     3. Include a random encounter table (1d6)
@@ -14,24 +14,38 @@ func getOnePageDungeonPrompt() string {
     5. Describe key locations within the dungeon
     6. Include any relevant traps or puzzles
     7. Provide monster statistics in abbreviated format
-    Format the response in markdown.`
+	8. Game-system agnostic
+    Format the response in markdown.
+	The author is anonymous.
+	No disclaimers or credits are necessary.
+	Everything is Creative Commons Zero with no attribution.`
 }
 
 func getExpandedAdventurePrompt() string {
-	return `Expand this one-page dungeon into a detailed 10-page adventure including:
+	return `Expand this one-page dungeon into a detailed 8 page adventure(about 600 lines) including:
     1. Detailed background and hook
     2. Complete location descriptions
-    3. Full NPC backgrounds and personalities
+    3. Full NPC descriptive backgrounds and personalities
     4. Detailed encounter descriptions
-    5. Complete monster statistics
+    5. Complete monster statistics with physical and tactical description
     6. Multiple possible paths through the adventure
     7. Alternative endings
     8. Scaling options for different party levels
-    Format the response in markdown with clear sections.`
+	9. Game-system agnostic
+    Format the response in markdown with clear sections.
+	The author is anonymous.
+	No disclaimers or credits are necessary.
+	Everything is Creative Commons Zero with no attribution.
+
+	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
+	Do this until you reach the full 8 pages minimum.
+	At the bottom of each page except the final page, add [continued on next page].
+	On the last page, add [final page].
+	`
 }
 
 func getIllustrationPrompt() string {
-	return `Generate 2-6 Stable Diffusion prompts for this adventure. Include:
+	prompt := `Generate 2-6 Stable Diffusion prompts for this adventure. Include:
     1. At least one map or location layout
     2. Key scenes or dramatic moments
     3. Important characters or monsters
@@ -40,16 +54,40 @@ func getIllustrationPrompt() string {
     - Detailed visual description
     - Art style (e.g., dark fantasy, heroic fantasy, etc.)
     - Lighting and mood
-    - Composition details`
+    - Composition details
+
+	Follow this example format exactly for each consecutive episode:`
+	prompt += "```\n"
+	prompt += `## Illustration: Number - Episode Title - Illustration Title
+Description: 3-8 sentence description of the scene optimized for Stable Diffusion XL
+Style: Stylistic description of the art
+Type: Map OR Portait OR Scene etc...
+
+`
+	prompt += "```\n"
+	return prompt
 }
 
 func getCopyrightRemovalPrompt() string {
-	return `Review and revise this adventure to remove or replace any copyrighted material:
+	return `Review and revise this adventure to remove or replace any copyrighted material and output a complete edited version:
     1. Replace specific D&D monsters with generic alternatives
     2. Remove trademarked spells and items
     3. Generalize any specific setting references
     4. Maintain the adventure's theme and feeling while using original content
-    5. Ensure mechanical elements are system-agnostic`
+    5. Ensure mechanical elements are system-agnostic
+	6. Output the complete adventure with revisions, do not provide suggestions.
+
+	Provide a complete revised and edited version of the entire adventure.
+	The author is anonymous.
+	No disclaimers or credits are necessary.
+	Everything is Creative Commons Zero with no attribution.
+
+
+	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
+	Do this until you reach the full 8 pages minimum.
+	At the bottom of each page except the final page, add [continued on next page].
+	On the last page, add [final page].
+	`
 }
 
 func parseEpisodes(content string) []Episode {
@@ -82,7 +120,6 @@ func parseEpisodes(content string) []Episode {
 	if currentEpisode.Title != "" {
 		episodes = append(episodes, currentEpisode)
 	}
-
 	return episodes
 }
 
