@@ -25,14 +25,18 @@ func saveToFiles(adventure *Adventure, outputDir string) error {
 
 		// Save episode content
 		episodePath := filepath.Join(episodeDir, "Episode.md")
-		if err := ioutil.WriteFile(episodePath, []byte(episode.FullAdventure), 0o644); err != nil {
-			return fmt.Errorf("saving episode: %w", err)
+		if len(episode.FullAdventure) > 0 {
+			if err := ioutil.WriteFile(episodePath, []byte(episode.FullAdventure), 0o644); err != nil {
+				return fmt.Errorf("saving episode: %w", err)
+			}
 		}
 
 		// Save one page dungeon content
 		onePagePath := filepath.Join(episodeDir, "OnePage.md")
-		if err := ioutil.WriteFile(onePagePath, []byte(episode.OnePageDungeon), 0o644); err != nil {
-			return fmt.Errorf("saving episode: %w", err)
+		if len(episode.OnePageDungeon) > 0 {
+			if err := ioutil.WriteFile(onePagePath, []byte(episode.OnePageDungeon), 0o644); err != nil {
+				return fmt.Errorf("saving episode: %w", err)
+			}
 		}
 
 		// Save illustration prompts
