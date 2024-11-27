@@ -112,10 +112,11 @@ func expandAdventures(client *ClaudeClient, adventure *Adventure) error {
 
 			// Check if Claude indicates it's continuing
 			if !strings.Contains(strings.ToLower(response), "continue") {
-				if err := saveToFiles(adventure, "tmp"); err != nil {
-					return fmt.Errorf("writing Episode %d %w", i, err)
-				}
 				break
+			}
+
+			if err := saveToFiles(adventure, "tmp"); err != nil {
+				return fmt.Errorf("writing Episode %d %w", i, err)
 			}
 
 			// Update prompt for continuation
@@ -136,11 +137,10 @@ func generateIllustrationPrompts(client *ClaudeClient, adventure *Adventure) err
 			return fmt.Errorf("generating illustration prompts for episode %d: %w", i, err)
 		}
 		log.Println(response)
+		adventure.Episodes[i].Illustrations = parseIllustrationPrompts(response)
 		if err := saveToFiles(adventure, "tmp"); err != nil {
 			return fmt.Errorf("writing Episode %d %w", i, err)
 		}
-
-		adventure.Episodes[i].Illustrations = parseIllustrationPrompts(response)
 	}
 	return nil
 }
