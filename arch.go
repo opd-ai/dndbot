@@ -16,6 +16,7 @@ type Adventure struct {
 	Episodes        []Episode
 	TableOfContents string
 	OriginalPrompt  string
+	Covers          []IllustrationPrompt
 }
 
 // Episode represents a single adventure episode

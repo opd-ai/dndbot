@@ -33,6 +33,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := generateCoverPrompts(client, &adventure); err != nil {
+		fmt.Printf("Error generating cover pages %v\n", err)
+		os.Exit(1)
+	}
+
 	if err := generateOnePageDungeons(client, &adventure); err != nil {
 		fmt.Printf("Error generating one-page dungeons: %v\n", err)
 		os.Exit(1)

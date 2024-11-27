@@ -145,6 +145,24 @@ func generateIllustrationPrompts(client *ClaudeClient, adventure *Adventure) err
 	return nil
 }
 
+func generateCoverPrompts(client *ClaudeClient, adventure *Adventure) error {
+	for i := range adventure.Episodes {
+		prompt := fmt.Sprintf("Generate cover illustration prompts for this adventure:\n%s\n",
+			adventure.TableOfContents)
+
+		response, err := client.SendMessage(getIllustrationPrompt(), prompt)
+		if err != nil {
+			return fmt.Errorf("generating illustration prompts for cover %d: %w", i, err)
+		}
+
+		adventure.Covers = parseIllustrationPrompts(response)
+		if err := saveToFiles(adventure, "tmp"); err != nil {
+			return fmt.Errorf("writing Episode %d %w", i, err)
+		}
+	}
+	return nil
+}
+
 func removeCopyrightedMaterial(client *ClaudeClient, adventure *Adventure) error {
 	for i := range adventure.Episodes {
 		// Build initial prompt
