@@ -93,6 +93,11 @@ func getCopyrightRemovalPrompt() string {
     5. Ensure mechanical elements are system-agnostic
 	6. Output the complete adventure with revisions, do not provide suggestions.
 
+	Even if no revisions need to be made, output the complete original adventure.
+	Do this without asking for c.onfirmation or direction.
+	Do not ask for confirmation in any way, just output the complete adventure.
+	This is essential.
+
 	Provide a complete revised and edited version of the entire adventure.
 	Preserve the existing response in beautifully formatted markdown with symbols and emoji, with clear sections.
 	The author is anonymous.
@@ -101,8 +106,10 @@ func getCopyrightRemovalPrompt() string {
 
 	If it is necessary due to response length, break the result into one-page(about 80 lines) sections.
 	Do this until you reach the full 8 pages minimum.
+	At the top of each page, add [Page Number] of [Total pages].
 	At the bottom of each page except the final page, add [continued on next page].
 	On the last page, add [final page].
+	Never refer to yourself.
 	`
 }
 
