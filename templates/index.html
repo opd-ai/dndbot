@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Adventure Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,700;1,400&family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <section class="hero">
+        <div>
+            <h1>D&D Adventure Generator</h1>
+            <p>Create unique, AI-powered adventures for your tabletop campaigns</p>
+            <a href="/order" class="button">Generate Adventure</a>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="story-navigator">
+            <div class="story-list">
+                <h2>Recent Adventures</h2>
+                {{range .Orders}}
+                <div class="story-entry">
+                    <button class="story-button" onclick="window.location.href='/order/{{.ID}}'">
+                        {{if .Title}}{{.Title}}{{else}}Adventure {{.ID}}{{end}}
+                        <br>
+                        <small>Status: {{.Status}}</small>
+                    </button>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="content-display">
+                <h2>Welcome, Dungeon Master!</h2>
+                <blockquote>
+                    <p>Begin your journey by clicking "Generate Adventure" above. Our AI will craft a unique storyline complete with NPCs, locations, and encounters.</p>
+                </blockquote>
+                
+                <ul>
+                    <li>AI-powered adventure generation</li>
+                    <li>Complete with maps and illustrations</li>
+                    <li>Balanced encounters and rewards</li>
+                    <li>Ready-to-run format</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

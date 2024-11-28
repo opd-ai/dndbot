@@ -1,0 +1,71 @@
+<!-- templates/order.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adventure Generator - Order #{{.Order.ID}}</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .payment-info { background: #f5f5f5; padding: 20px; border-radius: 5px; }
+        .logs { height: 300px; overflow-y: scroll; background: #f5f5f5; padding: 10px; }
+        .prompt-form { margin: 20px 0; }
+        .prompt-form textarea { width: 100%; height: 150px; }
+        .hidden { display: none; }
+    </style>
+    <script>
+        let ws;
+
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${window.location.host}/ws/{{.Order.ID}}`);
+            ws.onmessage = (event) => {
+                const logs = document.getElementById('logs');
+                logs.innerHTML += event.data + '<br>';
+                logs.scrollTop = logs.scrollHeight;
+                
+                if (event.data.includes("Payment confirmed")) {
+                    document.getElementById('payment-section').classList.add('hidden');
+                    document.getElementById('prompt-section').classList.remove('hidden');
+                } else if (event.data.includes("Adventure generation complete")) {
+                    document.getElementById('download-section').classList.remove('hidden');
+                }
+            };
+            ws.onclose = () => {
+                setTimeout(connectWebSocket, 1000);
+            };
+        }
+
+        window.onload = connectWebSocket;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Adventure Generator</h1>
+        
+        <div id="payment-section" class="payment-info {{if eq .Order.Status "paid"}}hidden{{end}}">
+            <h2>Payment Required</h2>
+            <p>Please send {{.Order.Amount}} XMR to:</p>
+            <pre>{{.Order.Address}}</pre>
+            <p>Payment ID: {{.Order.PaymentID}}</p>
+        </div>
+        
+        <div id="prompt-section" class="{{if ne .Order.Status "paid"}}hidden{{end}}">
+            <h2>Enter Your Adventure Prompt</h2>
+            <form action="/order/{{.Order.ID}}/submit" method="POST" class="prompt-form">
+                <textarea name="prompt" required 
+                    placeholder="Describe your adventure scenario..."></textarea>
+                <button type="submit">Generate Adventure</button>
+            </form>
+        </div>
+        
+        <div id="logs-section">
+            <h2>Progress Log</h2>
+            <div id="logs" class="logs"></div>
+        </div>
+        
+        <div id="download-section" class="{{if ne .Order.Status "complete"}}hidden{{end}}">
+            <h2>Download Your Adventure</h2>
+            <a href="/order/{{.Order.ID}}/download" 
+               class="button">Download Adventure ZIP</a>
+        </div>
+    </div>
+</body>
+</html>
