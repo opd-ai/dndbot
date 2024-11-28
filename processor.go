@@ -68,7 +68,7 @@ func generateOnePageDungeons(client *ClaudeClient, adventure *Adventure) error {
 			prompt += fmt.Sprintf("There was a previous adventure in this series. Here is summary of the previous adventure:\n%s\n",
 				adventure.Episodes[i-1].Text())
 		}
-		prompt += fmt.Sprintf("The original prompt provided by a human for this story arc was: \n%s\n", adventure.OriginalPrompt) + getSettingDetails()
+		prompt += fmt.Sprintf("The original prompt provided by a human for this story arc was: \n%s\n", adventure.OriginalPrompt)
 
 		response, err := client.SendMessage(getOnePageDungeonPrompt(), prompt)
 		if err != nil {

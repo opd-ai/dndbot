@@ -48,7 +48,7 @@ func getOnePageDungeonPrompt() string {
 	Fantasy is acceptable, but avoiding material circumstances is not.
 	Avoid overt flights of fancy.
 	Maintain verisimiliture throughout the story.
-	`
+	` + getSettingDetails()
 }
 
 func getExpandedAdventurePrompt() string {
@@ -84,7 +84,7 @@ func getExpandedAdventurePrompt() string {
 	At the bottom of each page except the final page, add [continued on next page].
 	On the last page, add [final page].
 	Never refer to yourself.
-	`
+	` + getSettingDetails()
 }
 
 func getIllustrationPrompt() string {
