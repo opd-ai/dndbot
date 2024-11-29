@@ -98,7 +98,7 @@ func ExpandAdventures(client *ClaudeClient, adventure *Adventure) error {
 
 		currentPrompt := prompt
 		for {
-			response, err := client.SendMessage(GetExpandedAdventurePrompt(), currentPrompt)
+			response, err := client.SendMessage(GetExpandedAdventurePrompt()+getWritingStyleDetails(), currentPrompt)
 			if err != nil {
 				return fmt.Errorf("expanding episode %d: %w", i, err)
 			}
@@ -118,7 +118,6 @@ func ExpandAdventures(client *ClaudeClient, adventure *Adventure) error {
 			if err := SaveToFiles(adventure, "tmp"); err != nil {
 				return fmt.Errorf("writing Episode %d %w", i, err)
 			}
-
 			// Update prompt for continuation
 			currentPrompt = "Please continue from where you left off:\n" + response
 		}

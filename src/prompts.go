@@ -6,6 +6,7 @@ import (
 )
 
 var Setting = "PROMPT.md"
+var Style = "STYLE.md"
 
 func getSettingDetails() string {
 	val := `
@@ -16,6 +17,19 @@ func getSettingDetails() string {
 	val += "```\n"
 	val += "BEGIN SETTING DETAILS\n"
 	bytes, err := os.ReadFile(Setting)
+	if err != nil {
+		return ""
+	}
+	val += string(bytes)
+	val += "END SETTING DETAILS\n"
+	val += "```\n"
+	return val
+}
+
+func getWritingStyleDetails() string {
+	val := "\n```\n"
+	val += "BEGIN WRITING STYLE DETAILS\n"
+	bytes, err := os.ReadFile(Style)
 	if err != nil {
 		return ""
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	. "github.com/opd-ai/dndbot/src"
+	dndbot "github.com/opd-ai/dndbot/src"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 // main.go
 func main() {
 	flag.Parse()
-	config := Config{
+	config := dndbot.Config{
 		APIKey:     os.Getenv("CLAUDE_API_KEY"),
 		OutputDir:  *directory,
 		MaxRetries: 3,
@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := NewClaudeClient(config.APIKey)
+	client := dndbot.NewClaudeClient(config.APIKey)
 	var prompt string
 	if len(os.Args) <= 1 {
 		var err error
@@ -45,38 +45,38 @@ func main() {
 		}
 	}
 	// Process the adventure
-	adventure, err := GenerateTableOfContents(client, prompt)
+	adventure, err := dndbot.GenerateTableOfContents(client, prompt)
 	if err != nil {
 		fmt.Printf("Error generating table of contents: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := GenerateCoverPrompts(client, &adventure); err != nil {
+	if err := dndbot.GenerateCoverPrompts(client, &adventure); err != nil {
 		fmt.Printf("Error generating cover pages %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := GenerateOnePageDungeons(client, &adventure); err != nil {
+	if err := dndbot.GenerateOnePageDungeons(client, &adventure); err != nil {
 		fmt.Printf("Error generating one-page dungeons: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := ExpandAdventures(client, &adventure); err != nil {
+	if err := dndbot.ExpandAdventures(client, &adventure); err != nil {
 		fmt.Printf("Error expanding adventures: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := GenerateIllustrationPrompts(client, &adventure); err != nil {
+	if err := dndbot.GenerateIllustrationPrompts(client, &adventure); err != nil {
 		fmt.Printf("Error generating illustration prompts: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := RemoveCopyrightedMaterial(client, &adventure); err != nil {
+	if err := dndbot.RemoveCopyrightedMaterial(client, &adventure); err != nil {
 		fmt.Printf("Error removing copyrighted material: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := SaveToFiles(&adventure, config.OutputDir); err != nil {
+	if err := dndbot.SaveToFiles(&adventure, config.OutputDir); err != nil {
 		fmt.Printf("Error saving files: %v\n", err)
 		os.Exit(1)
 	}
