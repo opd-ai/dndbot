@@ -33,9 +33,9 @@ func SaveToFiles(adventure *Adventure, outputDir string) error {
 		}
 
 		// Save episode content
-		episodePath := filepath.Join(cleanupBytes(episodeDir), "Episode.md")
+		episodePath := filepath.Join(episodeDir, "Episode.md")
 		if len(episode.FullAdventure) > 0 {
-			if err := ioutil.WriteFile(episodePath, []byte(episode.FullAdventure), 0o644); err != nil {
+			if err := ioutil.WriteFile(episodePath, []byte(cleanupBytes(episode.FullAdventure)), 0o644); err != nil {
 				return fmt.Errorf("saving episode: %w", err)
 			}
 		}
