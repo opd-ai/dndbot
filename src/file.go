@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func SaveToFiles(adventure *Adventure, outputDir string) error {
@@ -32,7 +33,7 @@ func SaveToFiles(adventure *Adventure, outputDir string) error {
 		}
 
 		// Save episode content
-		episodePath := filepath.Join(episodeDir, "Episode.md")
+		episodePath := filepath.Join(cleanupBytes(episodeDir), "Episode.md")
 		if len(episode.FullAdventure) > 0 {
 			if err := ioutil.WriteFile(episodePath, []byte(episode.FullAdventure), 0o644); err != nil {
 				return fmt.Errorf("saving episode: %w", err)
@@ -58,4 +59,13 @@ func SaveToFiles(adventure *Adventure, outputDir string) error {
 		}
 	}
 	return nil
+}
+
+func cleanupBytes(input string) string {
+	const (
+		searchText  = "[continued on next page]"
+		replaceText = "[continued on next page]\n\\newpage\n"
+	)
+
+	return strings.Replace(input, searchText, replaceText, -1)
 }
