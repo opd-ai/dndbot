@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
-var Setting = "PROMPT.md"
-var Style = "STYLE.md"
+var (
+	Setting = "PROMPT.md"
+	Style   = "STYLE.md"
+)
 
 func getSettingDetails() string {
 	val := `
