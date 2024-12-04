@@ -57,7 +57,10 @@ func main() {
 	// Start server
 	port := ":8081"
 	InfoLogger.Printf("Server starting on port %s", port)
-	if err := http.ListenAndServeTLS(port, "", "", handler); err != nil {
+	if err := http.ListenAndServe(port, handler); err != nil {
 		ErrorLogger.Fatal(err)
 	}
+	//if err := ListenAndServeTLS(port, "cert.pem", "key.pem", handler); err != nil {
+	//	ErrorLogger.Fatal(err)
+	//}
 }
