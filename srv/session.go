@@ -4,39 +4,43 @@ package main
 import (
 	"sync"
 	"time"
+
+	generator "github.com/opd-ai/dndbot/srv/generator"
 )
 
 type SessionManager struct {
-	sessions map[string]*GenerationProgress
+	sessions map[string]*generator.GenerationProgress
 	mu       sync.RWMutex
 }
 
 var GlobalSessionManager = &SessionManager{
-	sessions: make(map[string]*GenerationProgress),
+	sessions: make(map[string]*generator.GenerationProgress),
 }
 
-func (sm *SessionManager) CreateSession(sessionID string) *GenerationProgress {
+func (sm *SessionManager) CreateSession(sessionID string) *generator.GenerationProgress {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	progress := &GenerationProgress{
+	progress := &generator.GenerationProgress{
 		SessionID: sessionID,
-		StartTime: time.Now(),
-		State:     StateInitialized,
 		Done:      make(chan bool),
+		StartTime: time.Now(),
+		State:     generator.StateInitialized,
 		IsActive:  true,
 	}
-
 	sm.sessions[sessionID] = progress
 	return progress
 }
 
-func (sm *SessionManager) GetSession(sessionID string) (*GenerationProgress, bool) {
+func (sm *SessionManager) GetSession(sessionID string) (*generator.GenerationProgress, bool) {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
 	progress, exists := sm.sessions[sessionID]
-	return progress, exists && progress.IsStillActive()
+	if !exists || !progress.IsStillActive() {
+		return nil, false
+	}
+	return progress, true
 }
 
 func (sm *SessionManager) CleanupSession(sessionID string) {

@@ -1,5 +1,4 @@
-// types.go
-package main
+package generator
 
 import (
 	"sync"
@@ -27,6 +26,14 @@ type GenerationProgress struct {
 	Error     error
 	mu        sync.RWMutex
 	IsActive  bool
+}
+
+func (gp *GenerationProgress) Lock() {
+	gp.mu.Lock()
+}
+
+func (gp *GenerationProgress) Unlock() {
+	gp.mu.Unlock()
 }
 
 func (gp *GenerationProgress) UpdateState(state GenerationState) {

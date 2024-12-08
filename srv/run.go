@@ -1,11 +1,19 @@
 package main
 
 import (
+	"embed"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/opd-ai/dndbot/srv/util"
 )
+
+//go:embed templates/*
+var templateFS embed.FS
+
+//go:embed static/*
+var staticFS embed.FS
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -28,7 +36,6 @@ func main() {
 	r.HandleFunc("/generate", handleGenerate).Methods("POST")
 	r.HandleFunc("/ws/{sessionID}", handleWebSocket)
 	r.HandleFunc("/download/{sessionID}", handleDownload).Methods("GET")
-	r.HandleFunc("/health", handleHealthCheck).Methods("GET")
 
 	// Enable CORS
 	corsMiddleware := func(next http.Handler) http.Handler {
@@ -48,19 +55,16 @@ func main() {
 
 	// Apply middleware
 	handler := corsMiddleware(r)
-	r.Use(loggingMiddleware)
-	r.Use(recoveryMiddleware)
+	r.Use(util.LoggingMiddleware)
+	r.Use(util.RecoveryMiddleware)
 
 	// Start cleanup goroutine
 	go cleanupOldSessions()
 
 	// Start server
 	port := ":8081"
-	InfoLogger.Printf("Server starting on port %s", port)
+	util.InfoLogger.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(port, handler); err != nil {
-		ErrorLogger.Fatal(err)
+		util.ErrorLogger.Fatal(err)
 	}
-	//if err := ListenAndServeTLS(port, "cert.pem", "key.pem", handler); err != nil {
-	//	ErrorLogger.Fatal(err)
-	//}
 }
