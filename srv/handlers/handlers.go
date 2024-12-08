@@ -11,10 +11,6 @@ import (
 	"github.com/opd-ai/dndbot/srv/util"
 )
 
-func HandleGenerate(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFS(TemplateFS, "templates/index.html")
 	if err != nil {
