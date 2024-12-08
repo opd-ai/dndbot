@@ -1,11 +1,12 @@
 // session.go
-package main
+package handlers
 
 import (
 	"sync"
 	"time"
 
 	generator "github.com/opd-ai/dndbot/srv/generator"
+	"github.com/opd-ai/dndbot/srv/util"
 )
 
 type SessionManager struct {
@@ -15,6 +16,14 @@ type SessionManager struct {
 
 var GlobalSessionManager = &SessionManager{
 	sessions: make(map[string]*generator.GenerationProgress),
+}
+
+func (sm *SessionManager) Lock() {
+	sm.mu.Lock()
+}
+
+func (sm *SessionManager) Unlock() {
+	sm.mu.Unlock()
 }
 
 func (sm *SessionManager) CreateSession(sessionID string) *generator.GenerationProgress {
@@ -54,5 +63,21 @@ func (sm *SessionManager) CleanupSession(sessionID string) {
 		}
 		close(progress.Done)
 		delete(sm.sessions, sessionID)
+	}
+}
+
+func (sm *SessionManager) CleanupOldSessions() {
+	for {
+		time.Sleep(15 * time.Minute)
+		threshold := time.Now().Add(-1 * time.Hour)
+
+		sm.Lock()
+		for id, progress := range sm.sessions {
+			if progress.StartTime.Before(threshold) {
+				sm.CleanupSession(id)
+				util.InfoLogger.Printf("Cleaned up stale session: %s", id)
+			}
+		}
+		sm.Unlock()
 	}
 }

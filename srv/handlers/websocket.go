@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"net/http"
@@ -10,9 +10,7 @@ import (
 	"github.com/opd-ai/dndbot/srv/util"
 )
 
-// handlers.go
-// websocket.go
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	sessionID := chi.URLParam(r, "sessionID")
 	if sessionID == "" {
 		http.Error(w, "Missing session ID", http.StatusBadRequest)
@@ -57,14 +55,14 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	progress.UpdateState(generator.StateConnected)
 	progress.Unlock()
 
-	// Keep-alive handler
-	go handleKeepAlive(progress)
+	// Keep-alive Handler
+	go HandleKeepAlive(progress)
 
-	// Message handler
-	handleWebSocketMessages(progress, conn)
+	// Message Handler
+	HandleWebSocketMessages(progress, conn)
 }
 
-func handleKeepAlive(progress *generator.GenerationProgress) {
+func HandleKeepAlive(progress *generator.GenerationProgress) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -82,7 +80,7 @@ func handleKeepAlive(progress *generator.GenerationProgress) {
 	}
 }
 
-func handleWebSocketMessages(progress *generator.GenerationProgress, conn *websocket.Conn) {
+func HandleWebSocketMessages(progress *generator.GenerationProgress, conn *websocket.Conn) {
 	defer func() {
 		conn.Close()
 		progress.SetActive(false)

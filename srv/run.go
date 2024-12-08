@@ -1,19 +1,13 @@
 package main
 
 import (
-	"embed"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	. "github.com/opd-ai/dndbot/srv/handlers"
 	"github.com/opd-ai/dndbot/srv/util"
 )
-
-//go:embed templates/*
-var templateFS embed.FS
-
-//go:embed static/*
-var staticFS embed.FS
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -28,14 +22,14 @@ func main() {
 	r := mux.NewRouter()
 
 	// Static file serving
-	fileServer := http.FileServer(http.FS(staticFS))
+	fileServer := http.FileServer(http.FS(StaticFS))
 	r.PathPrefix("/static/").Handler(fileServer)
 
 	// API routes
-	r.HandleFunc("/", handleIndex)
-	r.HandleFunc("/generate", handleGenerate).Methods("POST")
-	r.HandleFunc("/ws/{sessionID}", handleWebSocket)
-	r.HandleFunc("/download/{sessionID}", handleDownload).Methods("GET")
+	r.HandleFunc("/", HandleIndex)
+	r.HandleFunc("/generate", HandleGenerate).Methods("POST")
+	r.HandleFunc("/ws/{sessionID}", HandleWebSocket)
+	r.HandleFunc("/download/{sessionID}", HandleDownload).Methods("GET")
 
 	// Enable CORS
 	corsMiddleware := func(next http.Handler) http.Handler {
@@ -59,7 +53,7 @@ func main() {
 	r.Use(util.RecoveryMiddleware)
 
 	// Start cleanup goroutine
-	go cleanupOldSessions()
+	go GlobalSessionManager.CleanupOldSessions()
 
 	// Start server
 	port := ":8081"
