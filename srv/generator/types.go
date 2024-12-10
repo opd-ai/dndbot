@@ -60,3 +60,9 @@ func (gp *GenerationProgress) IsStillActive() bool {
 	defer gp.mu.RUnlock()
 	return gp.IsActive
 }
+
+func (gp *GenerationProgress) IsDone() bool {
+	gp.mu.Lock()
+	defer gp.mu.Unlock()
+	return (StateCompleted == gp.GetState())
+}

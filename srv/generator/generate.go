@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"log"
+
 	"github.com/gorilla/websocket"
 	dndbot "github.com/opd-ai/dndbot/src"
-	util "github.com/opd-ai/dndbot/srv/util"
+	//util "github.com/opd-ai/dndbot/srv/util"
 )
 
 func GenerateAdventure(progress *GenerationProgress, prompt string) error {
@@ -20,7 +22,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 			progress.mu.Lock()
 			defer progress.mu.Unlock()
 			if err := progress.WSConn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-				util.ErrorLogger.Printf("Failed to send WebSocket message: %v", err)
+				log.Println("Failed to send WebSocket message: %v", err)
 			}
 		}
 	}

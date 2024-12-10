@@ -1,0 +1,40 @@
+package components
+
+templ GeneratorForm() {
+    <div class="container">
+        <h1>D&D Adventure Generator</h1>
+        <form
+            hx-post="/generate"
+            hx-target="#status"
+            hx-swap="innerHTML"
+            hx-on::after-request="this.reset()"
+        >
+            <div class="form-group">
+                <label for="prompt">Adventure Prompt:</label>
+                <textarea 
+                    name="prompt" 
+                    required
+                    placeholder="Describe your adventure idea..."
+                ></textarea>
+            </div>
+            <button type="submit">Generate Adventure</button>
+        </form>
+        
+        <div 
+            id="status"
+            class="status-container"
+        ></div>
+    </div>
+}
+
+templ GenerationStatus(sessionID string) {
+    <div
+        hx-ext="ws"
+        hx-ws={ "connect:/ws/" + sessionID }
+        class="generation-status"
+    >
+        <div class="status-message">
+            🎲 Initializing adventure generation...
+        </div>
+    </div>
+}
