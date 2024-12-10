@@ -1,31 +1,21 @@
 package generator
 
 import (
+	"archive/zip"
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
 
-	"log"
-
-	"github.com/gorilla/websocket"
 	dndbot "github.com/opd-ai/dndbot/src"
-	//util "github.com/opd-ai/dndbot/srv/util"
+	// util "github.com/opd-ai/dndbot/srv/util"
 )
 
 func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 	client := dndbot.NewClaudeClient(os.Getenv("CLAUDE_API_KEY"))
-	// Helper function to send WebSocket updates
-	sendUpdate := func(message string) {
-		if progress.WSConn != nil {
-			progress.mu.Lock()
-			defer progress.mu.Unlock()
-			if err := progress.WSConn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-				log.Println("Failed to send WebSocket message: %v", err)
-			}
-		}
-	}
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
@@ -42,7 +32,8 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 		{
 			name: "Generating table of contents",
 			function: func() error {
-				sendUpdate("🎲 Generating table of contents...")
+				log.Println("Generating table of Contents")
+				progress.UpdateOutput("🎲 Generating table of contents...")
 				var err error
 				adventure, err = dndbot.GenerateTableOfContents(client, prompt)
 				return err
@@ -51,62 +42,132 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 		{
 			name: "Creating cover pages",
 			function: func() error {
-				sendUpdate("🎨 Creating cover pages...")
+				log.Println("Creating cover pages")
+				progress.UpdateOutput("🎨 Creating cover pages...")
 				return dndbot.GenerateCoverPrompts(client, &adventure)
 			},
 		},
 		{
 			name: "Designing dungeons",
 			function: func() error {
-				sendUpdate("🗺️ Designing dungeon layouts...")
+				log.Println("Designing dungeon layouts")
+				progress.UpdateOutput("🗺️ Designing dungeon layouts...")
 				return dndbot.GenerateOnePageDungeons(client, &adventure)
 			},
 		},
 		{
 			name: "Expanding adventure content",
 			function: func() error {
-				sendUpdate("📚 Expanding adventure content...")
+				log.Println("Expanding adventure content")
+				progress.UpdateOutput("📚 Expanding adventure content...")
 				return dndbot.ExpandAdventures(client, &adventure)
 			},
 		},
 		{
 			name: "Creating illustrations",
 			function: func() error {
-				sendUpdate("🖼️ Creating illustration prompts...")
+				log.Println("Creating illustration prompts")
+				progress.UpdateOutput("🖼️ Creating illustration prompts...")
 				return dndbot.GenerateIllustrationPrompts(client, &adventure)
 			},
 		},
 		{
 			name: "Reviewing content",
 			function: func() error {
-				sendUpdate("⚖️ Reviewing and adjusting content...")
+				log.Println("Review and adjust content")
+				progress.UpdateOutput("⚖️ Reviewing and adjusting content...")
 				return dndbot.RemoveCopyrightedMaterial(client, &adventure)
 			},
 		},
 		{
 			name: "Saving files",
 			function: func() error {
-				sendUpdate("💾 Saving adventure files...")
+				log.Println("Save adventure files")
+				progress.UpdateOutput("💾 Saving adventure files...")
 				return dndbot.SaveToFiles(&adventure, filepath.Join("outputs", progress.SessionID))
+			},
+		},
+		{
+			name: "Generating zip",
+			function: func() error {
+				log.Println("Generating zip file")
+				progress.UpdateOutput("💾 Generating zip file...")
+				zipPath, err := ZipOutputDirectory(filepath.Join("outputs", progress.SessionID))
+				if err != nil {
+					return err
+				}
+				zipHref := fmt.Sprintf("<a href=\"%s\">Download your archived adventure</a>", zipPath)
+				zipMessage := fmt.Sprintf("💾 Adventure generatation complete!", zipHref)
+				progress.UpdateOutput(zipMessage)
+				return nil
 			},
 		},
 	}
 
 	// Execute each step with error handling and progress updates
-	for _, step := range steps {
+	for x, step := range steps {
 		select {
 		case <-ctx.Done():
+			log.Printf("Generation timeout during step: %d", x)
 			return fmt.Errorf("generation timed out during %s", step.name)
 		default:
 			if err := step.function(); err != nil {
 				errMsg := fmt.Sprintf("❌ Error during %s: %v", step.name, err)
-				sendUpdate(errMsg)
+				log.Println(errMsg)
+				progress.UpdateOutput(errMsg)
 				return fmt.Errorf("failed during %s: %w", step.name, err)
 			}
 		}
 	}
 
 	// Send completion message
-	sendUpdate("✨ Adventure generation completed successfully!")
+	progress.UpdateOutput("✨ Adventure generation completed successfully!")
 	return nil
+}
+
+func ZipOutputDirectory(outDir string) (zipPath string, err error) {
+	zipPath = outDir + ".zip"
+	file, err := os.Create(zipPath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	w := zip.NewWriter(file)
+	defer w.Close()
+
+	walker := func(path string, info os.FileInfo, err error) error {
+		if filepath.IsAbs(path) {
+			return fmt.Errorf("absolute path error: %s", path)
+		}
+		fmt.Printf("Crawling: %#v\n", path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		f, err := w.Create(path)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(f, file)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	err = filepath.Walk("input", walker)
+	if err != nil {
+		return
+	}
+	return
 }

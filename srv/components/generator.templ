@@ -1,43 +1,68 @@
-// srv/components/generator.templ
 package components
 
 templ GeneratorForm() {
-    <div class="container">
-        <h1>D&D Adventure Generator</h1>
-        <form
-            hx-post="/generate"
-            hx-target="#status"
-            hx-swap="innerHTML"
-            hx-indicator="#spinner"
-        >
-            <div class="form-group">
-                <label for="prompt">Adventure Prompt:</label>
-                <textarea 
-                    name="prompt" 
-                    required
-                    placeholder="Describe your adventure idea..."
-                ></textarea>
-            </div>
-            <button type="submit">
-                <span>Generate Adventure</span>
-                <div id="spinner" class="htmx-indicator">🎲</div>
-            </button>
+    <div class="generator-container">
+        <form id="generator-form" hx-post="/generate" hx-target="#generation-status">
+            <textarea name="prompt" required placeholder="Enter your prompt..."></textarea>
+            <button type="submit">Generate</button>
         </form>
-        
-        <div id="status" class="status-container"></div>
+        <div id="generation-status"></div>
     </div>
 }
 
 templ GenerationStatus(sessionID string) {
     <div
+        id="ws-status"
         hx-ext="ws"
-        hx-ws={ "connect:/ws/" + sessionID }
+        ws-connect={ "/ws/" + sessionID }
         class="generation-status"
     >
-        <div class="progress-container">
-            <div class="status-message">
-                🎲 Initializing adventure generation...
-            </div>
+        <div id="ws-output" class="output-container">
+            <!-- Messages will be inserted here -->
         </div>
+
+        <style>
+            .output-container {
+                min-height: 100px;
+                max-height: 400px;
+                overflow-y: auto;
+                padding: 1rem;
+                border: 1px solid #ccc;
+                margin-top: 1rem;
+                background: #f9f9f9;
+            }
+            .message {
+                margin-bottom: 0.5rem;
+                padding: 0.5rem;
+                border-left: 3px solid #ccc;
+                background: white;
+            }
+            .message.generating { border-color: #ffd700; }
+            .message.completed { border-color: #4caf50; }
+            .message.error { border-color: #f44336; }
+        </style>
+
+        <script>
+            document.addEventListener('htmx:wsAfterMessage', function(evt) {
+                try {
+                    const output = document.getElementById('ws-output');
+                    const data = JSON.parse(evt.detail.message);
+                    
+                    const div = document.createElement('div');
+                    div.className = `message ${data.status || 'generating'}`;
+                    div.innerHTML = `
+                        <strong>${data.status || 'generating'}</strong>
+                        <p>${data.message || ''}</p>
+                        ${data.output ? `<pre>${data.output}</pre>` : ''}
+                    `;
+                    
+                    output.appendChild(div);
+                    output.scrollTop = output.scrollHeight;
+                    
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                }
+            });
+        </script>
     </div>
 }
