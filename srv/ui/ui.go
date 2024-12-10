@@ -1,4 +1,4 @@
-// internal/ui/generator.go
+// srv/ui/ui.go
 package ui
 
 import (
@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+
 	"github.com/opd-ai/dndbot/srv/components"
 	"github.com/opd-ai/dndbot/srv/generator"
 )
@@ -34,11 +35,14 @@ func (ui *GeneratorUI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui *GeneratorUI) setupRoutes() {
+	// Serve static files
+	fileServer := http.FileServer(http.Dir("static"))
+	ui.router.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+
+	// API routes
 	ui.router.Get("/", ui.handleHome)
 	ui.router.Post("/generate", ui.handleGenerate)
 	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)
-	ui.router.Handle("/static/*", http.StripPrefix("/static/",
-		http.FileServer(http.Dir("static"))))
 }
 
 func (ui *GeneratorUI) handleHome(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +64,6 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 
 	sessionID := uuid.New().String()
 
-	// Create new progress tracker
 	progress := &generator.GenerationProgress{
 		SessionID: sessionID,
 		Done:      make(chan bool),
@@ -69,7 +72,6 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		IsActive:  true,
 	}
 
-	// Store session
 	ui.sessionsM.Lock()
 	ui.sessions[sessionID] = progress
 	ui.sessionsM.Unlock()
@@ -79,8 +81,14 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			progress.SetActive(false)
 			close(progress.Done)
+
+			// Cleanup session after completion
+			ui.sessionsM.Lock()
+			delete(ui.sessions, sessionID)
+			ui.sessionsM.Unlock()
 		}()
 
+		progress.UpdateState(generator.StateGenerating)
 		if err := generator.GenerateAdventure(progress, prompt); err != nil {
 			progress.UpdateState(generator.StateError)
 			progress.Error = err
@@ -90,7 +98,6 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		progress.UpdateState(generator.StateCompleted)
 	}()
 
-	// Render the status component with WebSocket connection
 	components.GenerationStatus(sessionID).Render(r.Context(), w)
 }
 
@@ -106,7 +113,6 @@ func (ui *GeneratorUI) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Upgrade connection to WebSocket
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -122,12 +128,12 @@ func (ui *GeneratorUI) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Set WebSocket connection in progress
 	progress.Lock()
 	progress.WSConn = conn
+	progress.State = generator.StateConnected
 	progress.Unlock()
 
-	// Wait for completion or disconnection
+	// Keep connection alive until generation is complete or client disconnects
 	select {
 	case <-progress.Done:
 		return

@@ -1,3 +1,4 @@
+// srv/components/generator.templ
 package components
 
 templ GeneratorForm() {
@@ -7,7 +8,7 @@ templ GeneratorForm() {
             hx-post="/generate"
             hx-target="#status"
             hx-swap="innerHTML"
-            hx-on::after-request="this.reset()"
+            hx-indicator="#spinner"
         >
             <div class="form-group">
                 <label for="prompt">Adventure Prompt:</label>
@@ -17,13 +18,13 @@ templ GeneratorForm() {
                     placeholder="Describe your adventure idea..."
                 ></textarea>
             </div>
-            <button type="submit">Generate Adventure</button>
+            <button type="submit">
+                <span>Generate Adventure</span>
+                <div id="spinner" class="htmx-indicator">🎲</div>
+            </button>
         </form>
         
-        <div 
-            id="status"
-            class="status-container"
-        ></div>
+        <div id="status" class="status-container"></div>
     </div>
 }
 
@@ -33,8 +34,10 @@ templ GenerationStatus(sessionID string) {
         hx-ws={ "connect:/ws/" + sessionID }
         class="generation-status"
     >
-        <div class="status-message">
-            🎲 Initializing adventure generation...
+        <div class="progress-container">
+            <div class="status-message">
+                🎲 Initializing adventure generation...
+            </div>
         </div>
     </div>
 }
