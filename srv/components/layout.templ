@@ -18,15 +18,39 @@ templ Layout() {
                 // Global message handler
                 htmx.logAll(); // Enable HTMX debugging
                 
-                // Handle page visibility
+                // Session management
+                const sessionManager = {
+                    getSessionId: () => localStorage.getItem('sessionId'),
+                    setSessionId: (id) => localStorage.setItem('sessionId', id),
+                    clearSession: () => localStorage.removeItem('sessionId')
+                };
+
+                // Handle page visibility and session restoration
                 document.addEventListener('visibilitychange', function() {
                     if (!document.hidden) {
-                        const wsOutput = document.getElementById('ws-output');
-                        if (wsOutput) {
-                            const sessionId = document.querySelector('[data-session-id]')?.dataset.sessionId;
-                            if (sessionId) {
-                                wsOutput.dispatchEvent(new Event('reload'));
+                        const sessionId = sessionManager.getSessionId();
+                        if (sessionId) {
+                            const statusDiv = document.getElementById('generation-status');
+                            if (statusDiv) {
+                                htmx.ajax('GET', '/check-session', {
+                                    target: '#generation-status',
+                                    swap: 'innerHTML'
+                                });
                             }
+                        }
+                    }
+                });
+
+                // Initial session check on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    const sessionId = sessionManager.getSessionId();
+                    if (sessionId) {
+                        const statusDiv = document.getElementById('generation-status');
+                        if (statusDiv) {
+                            htmx.ajax('GET', '/check-session', {
+                                target: '#generation-status',
+                                swap: 'innerHTML'
+                            });
                         }
                     }
                 });

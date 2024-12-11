@@ -1,0 +1,72 @@
+package components
+
+templ messageStyles() {
+    <style>
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+        }
+
+        .message.thinking {
+            background-color: #e9ecef;
+        }
+
+        .message.error {
+            background-color: #ffe6e6;
+        }
+
+        .message.success {
+            background-color: #e6ffe6;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .message-content {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-output {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            font-style: italic;
+        }
+
+        #message-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #message-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #message-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #message-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+}
