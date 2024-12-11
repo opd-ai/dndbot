@@ -233,52 +233,6 @@ func (ui *GeneratorUI) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "sessionID")
-	log.Printf("[DEBUG] Starting handleGetMessages for session: %s", sessionID)
-
-	// Set headers early
-	w.Header().Set("Content-Type", "application/json")
-
-	// Use buffered channel for message passing
-	messageChan := make(chan []generator.WSMessage, 1)
-	//	errChan := make(chan error, 1)
-
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-
-	go func() {
-		ui.sessionsM.RLock()
-		history, exists := ui.msgHistory[sessionID]
-		ui.sessionsM.RUnlock()
-
-		if !exists {
-			messageChan <- []generator.WSMessage{}
-			return
-		}
-
-		messages := history.GetMessages()
-		messageChan <- messages
-	}()
-
-	// Wait for result or timeout
-	select {
-	case <-ctx.Done():
-		log.Printf("[ERROR] Timeout getting messages for session: %s", sessionID)
-		http.Error(w, "Request timeout", http.StatusGatewayTimeout)
-		return
-
-	case messages := <-messageChan:
-		if err := json.NewEncoder(w).Encode(messages); err != nil {
-			log.Printf("[ERROR] Failed to encode messages for session %s: %v", sessionID, err)
-			http.Error(w, "Failed to encode messages", http.StatusInternalServerError)
-			return
-		}
-		log.Printf("[DEBUG] Successfully sent messages for session: %s", sessionID)
-	}
-}*/
-
 func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
 	sessionID := chi.URLParam(r, "sessionID")
 
