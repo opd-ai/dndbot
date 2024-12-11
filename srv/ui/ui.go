@@ -219,13 +219,10 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Post("/generate", ui.handleGenerate)
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)
+	ui.router.Get("/check-session", ui.handleCheckSession)
 
 	fileServer := http.FileServer(http.Dir("static"))
 	ui.router.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 	outputServer := http.FileServer(http.Dir("outputs"))
 	ui.router.Handle("/outputs/*", http.StripPrefix("/outputs/", outputServer))
-}
-
-func isValidSession(sessionID string) bool {
-	return sessionID != ""
 }

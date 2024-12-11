@@ -3,8 +3,10 @@ package ui
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -31,11 +33,12 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for existing session
+	// Check for existing valid session
 	var sessionID string
-	if cookie, err := r.Cookie("session_id"); err == nil {
+	if cookie, err := r.Cookie("session_id"); err == nil && isValidSession(cookie.Value) {
 		sessionID = cookie.Value
 	} else {
+		// Create new session if none exists or invalid
 		sessionID = uuid.New().String()
 	}
 
@@ -59,6 +62,12 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 
 	ui.sessionsM.Lock()
 	ui.sessions[sessionID] = progress
+	// Initialize message history if it doesn't exist
+	if _, exists := ui.msgHistory[sessionID]; !exists {
+		ui.msgHistory[sessionID] = &MessageHistory{
+			Messages: make([]generator.WSMessage, 0),
+		}
+	}
 	ui.sessionsM.Unlock()
 
 	// Initialize message history for new session
@@ -269,4 +278,66 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 		}
 		log.Printf("[DEBUG] Successfully sent messages for session: %s", sessionID)
 	}
+}
+
+// Add this to handlers.go
+func (ui *GeneratorUI) handleCheckSession(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		// No existing session, render empty status
+		components.GenerationStatus("").Render(r.Context(), w)
+		return
+	}
+
+	sessionID := cookie.Value
+	if !isValidSession(sessionID) {
+		// Invalid session, clear cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+		})
+		components.GenerationStatus("").Render(r.Context(), w)
+		return
+	}
+
+	// Valid session exists, render with session ID
+	components.GenerationStatus(sessionID).Render(r.Context(), w)
+}
+
+// Add this helper function
+func isValidSession(sessionID string) bool {
+	if sessionID == "" {
+		return false
+	}
+
+	// Validate UUID format
+	_, err := uuid.Parse(sessionID)
+	return err == nil
+}
+
+func formatMessages(messages []generator.WSMessage) string {
+	var html strings.Builder
+	for _, msg := range messages {
+		html.WriteString(fmt.Sprintf(`
+            <div class="message %s">
+                <div class="message-header">
+                    <span>%s</span>
+                    <span>%s</span>
+                </div>
+                %s
+                %s
+            </div>
+        `,
+			msg.Status,
+			msg.Status,
+			msg.Timestamp.Format("15:04:05"),
+			formatContent(msg.Message),
+			formatOutput(msg.Output),
+		))
+	}
+	return html.String()
 }
