@@ -1,11 +1,8 @@
 package ui
 
 import (
-	"fmt"
-	"html"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -40,6 +37,7 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		// Create new session if none exists or invalid
 		sessionID = uuid.New().String()
 	}
+	w.Header().Set("X-Session-Id", sessionID)
 
 	// Set or update session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -250,85 +248,31 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 	w.Write([]byte(formatMessages(messages)))
 }
 
-// Add this to handlers.go
 func (ui *GeneratorUI) handleCheckSession(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		// No existing session, render empty status
-		components.GenerationStatus("").Render(r.Context(), w)
-		return
-	}
-
-	sessionID := cookie.Value
-	if !isValidSession(sessionID) {
-		// Invalid session, clear cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_id",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
-		components.GenerationStatus("").Render(r.Context(), w)
-		return
-	}
-
-	// Valid session exists, render with session ID
-	components.GenerationStatus(sessionID).Render(r.Context(), w)
-}
-
-// Add this helper function
-func isValidSession(sessionID string) bool {
+	sessionID := r.Header.Get("X-Session-Id")
 	if sessionID == "" {
-		return false
+		// Try cookie as fallback
+		if cookie, err := r.Cookie("session_id"); err == nil {
+			sessionID = cookie.Value
+		}
 	}
 
-	// Validate UUID format
-	_, err := uuid.Parse(sessionID)
-	return err == nil
-}
-
-// formatMessages formats a slice of WebSocket messages into HTML
-func formatMessages(messages []generator.WSMessage) string {
-	var html strings.Builder
-	for _, msg := range messages {
-		html.WriteString(fmt.Sprintf(`
-            <div class="message %s">
-                <div class="message-header">
-                    <span>%s</span>
-                    <span>%s</span>
-                </div>
-                %s
-                %s
-            </div>
-        `,
-			msg.Status,
-			msg.Status,
-			msg.Timestamp.Format("15:04:05"),
-			formatContent(msg.Message),
-			formatOutput(msg.Output),
-		))
+	if !isValidSession(sessionID) {
+		components.GenerationStatus("").Render(r.Context(), w)
+		return
 	}
-	return html.String()
-}
 
-// formatContent formats the message content with proper HTML escaping
-func formatContent(content string) string {
-	if content == "" {
-		return ""
-	}
-	// Escape HTML special characters to prevent XSS
-	escaped := html.EscapeString(content)
-	return fmt.Sprintf("<p class=\"message-content\">%s</p>", escaped)
-}
+	// Check if session exists in memory or cache
+	ui.sessionsM.RLock()
+	_, exists := ui.sessions[sessionID]
+	ui.sessionsM.RUnlock()
 
-// formatOutput formats the output content with proper HTML escaping
-func formatOutput(output string) string {
-	if output == "" {
-		return ""
+	if !exists {
+		if _, found := ui.cache.Get(sessionID); !found {
+			components.GenerationStatus("").Render(r.Context(), w)
+			return
+		}
 	}
-	// Escape HTML special characters to prevent XSS
-	escaped := html.EscapeString(output)
-	return fmt.Sprintf("<pre class=\"message-output\">%s</pre>", escaped)
+
+	components.GenerationStatus(sessionID).Render(r.Context(), w)
 }

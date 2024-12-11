@@ -26,9 +26,7 @@ templ GeneratorForm() {
                 Generate
             </button>
         </form>
-        <div id="generation-status">
-            @GenerationStatus("")
-        </div>
+        <div id="generation-status" hx-trigger="load" hx-get="/check-session"></div>
     </div>
 }
 
@@ -38,6 +36,9 @@ templ GenerationStatus(sessionID string) {
             id="generation-output"
             class="generation-status"
             data-session-id={ sessionID }
+            hx-trigger="load"
+            hx-get={ fmt.Sprintf("/api/messages/%s", sessionID) }
+            hx-target="#message-container"
         >
             @messageContainer(sessionID)
             @messageStyles()
@@ -50,6 +51,7 @@ templ messageContainer(sessionID string) {
     <div 
         id="message-container" 
         class="message-output"
+        data-session-id={ sessionID }
         hx-get={ fmt.Sprintf("/api/messages/%s", sessionID) }
         hx-trigger="load delay:500ms, every 2s"
         hx-swap="innerHTML"
@@ -58,7 +60,22 @@ templ messageContainer(sessionID string) {
     </div>
 }
 
+// ... (messageStyles() remains the same)
+
 script messageHandling() {
+    // Initialize session check on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionId = sessionManager.getSessionId();
+        if (sessionId) {
+            const messageContainer = document.querySelector('#message-container');
+            if (messageContainer) {
+                messageContainer.setAttribute('data-session-id', sessionId);
+                htmx.trigger(messageContainer, 'load');
+            }
+        }
+    });
+
+    // Handle successful message loads
     htmx.on('#message-container', 'htmx:afterRequest', function(evt) {
         if (evt.detail.successful) {
             const container = document.getElementById('message-container');
@@ -68,6 +85,7 @@ script messageHandling() {
         }
     });
 
+    // Add session ID to requests
     htmx.on('#message-container', 'htmx:beforeRequest', function(evt) {
         const sessionId = sessionManager.getSessionId();
         if (sessionId) {
@@ -86,7 +104,7 @@ script messageHandling() {
         }
     });
 
-    // Refresh messages when tab becomes visible
+    // Update messages when tab becomes visible
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             const sessionId = sessionManager.getSessionId();

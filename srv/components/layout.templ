@@ -15,45 +15,47 @@ templ Layout() {
         <body>
             { children... }
             <script>
-                // Global message handler
-                htmx.logAll(); // Enable HTMX debugging
-                
                 // Session management
                 const sessionManager = {
                     getSessionId: () => localStorage.getItem('sessionId'),
-                    setSessionId: (id) => localStorage.setItem('sessionId', id),
-                    clearSession: () => localStorage.removeItem('sessionId')
-                };
-
-                // Handle page visibility and session restoration
-                document.addEventListener('visibilitychange', function() {
-                    if (!document.hidden) {
-                        const sessionId = sessionManager.getSessionId();
-                        if (sessionId) {
-                            const statusDiv = document.getElementById('generation-status');
-                            if (statusDiv) {
-                                htmx.ajax('GET', '/check-session', {
-                                    target: '#generation-status',
-                                    swap: 'innerHTML'
-                                });
-                            }
+                    setSessionId: (id) => {
+                        localStorage.setItem('sessionId', id);
+                        // Trigger message container reload when session is set
+                        const container = document.getElementById('message-container');
+                        if (container) {
+                            container.setAttribute('data-session-id', id);
+                            htmx.trigger(container, 'load');
                         }
-                    }
-                });
-
-                // Initial session check on page load
-                document.addEventListener('DOMContentLoaded', function() {
-                    const sessionId = sessionManager.getSessionId();
-                    if (sessionId) {
-                        const statusDiv = document.getElementById('generation-status');
-                        if (statusDiv) {
+                    },
+                    clearSession: () => localStorage.removeItem('sessionId'),
+                    initializeSession: function() {
+                        const sessionId = this.getSessionId();
+                        if (sessionId) {
                             htmx.ajax('GET', '/check-session', {
+                                headers: {
+                                    'X-Session-Id': sessionId
+                                },
                                 target: '#generation-status',
                                 swap: 'innerHTML'
                             });
                         }
                     }
+                };
+
+                // Initialize on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    sessionManager.initializeSession();
                 });
+
+                // Handle visibility changes
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        sessionManager.initializeSession();
+                    }
+                });
+
+                // Enable HTMX debugging
+                htmx.logAll();
             </script>
         </body>
     </html>
