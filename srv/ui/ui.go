@@ -16,6 +16,7 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/opd-ai/dndbot/srv/generator"
+	"github.com/opd-ai/paywall"
 )
 
 type GeneratorUI struct {
@@ -214,10 +215,13 @@ func (ui *GeneratorUI) setupRoutes() {
 			next.ServeHTTP(w, r)
 		})
 	})
-
+	pw, err := paywall.ConstructPaywall()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	ui.router.Post("/generate", ui.handleGenerate)
+	ui.router.Post("/generate", pw.MiddlewareFuncFunc(ui.handleGenerate))
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)
 	ui.router.Get("/check-session", ui.handleCheckSession)

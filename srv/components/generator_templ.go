@@ -33,15 +33,7 @@ func GeneratorForm() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"generator-container\"><form id=\"generator-form\" hx-post=\"/generate\" hx-target=\"#generation-status\" hx-on::after-request=\"\n                const sessionId = event.detail.headers[&#39;X-Session-Id&#39;];\n                if (sessionId) {\n                    sessionManager.setSessionId(sessionId);\n                }\n            \"><textarea name=\"prompt\" required placeholder=\"Enter your prompt...\" class=\"w-full p-2 border rounded\"></textarea> <button type=\"submit\" class=\"px-4 py-2 bg-blue-500 text-white rounded\">Generate</button></form><div id=\"generation-status\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = GenerationStatus("").Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"generator-container\"><form id=\"generator-form\" hx-post=\"/generate\" hx-target=\"#generation-status\" hx-on::after-request=\"\n                const sessionId = event.detail.headers[&#39;X-Session-Id&#39;];\n                if (sessionId) {\n                    sessionManager.setSessionId(sessionId);\n                }\n            \"><textarea name=\"prompt\" required placeholder=\"Enter your prompt...\" class=\"w-full p-2 border rounded\"></textarea> <button type=\"submit\" class=\"px-4 py-2 bg-blue-500 text-white rounded\">Generate</button></form><div id=\"generation-status\" hx-trigger=\"load\" hx-get=\"/check-session\"></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -78,13 +70,26 @@ func GenerationStatus(sessionID string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 40, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 38, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-trigger=\"load\" hx-get=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/api/messages/%s", sessionID))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 40, Col: 63}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-target=\"#message-container\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -125,21 +130,34 @@ func messageContainer(sessionID string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"message-container\" class=\"message-output\" hx-get=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"message-container\" class=\"message-output\" data-session-id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/api/messages/%s", sessionID))
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(sessionID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 53, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 54, Col: 35}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-get=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/api/messages/%s", sessionID))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `srv/components/generator.templ`, Line: 55, Col: 59}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,10 +169,24 @@ func messageContainer(sessionID string) templ.Component {
 	})
 }
 
+// ... (messageStyles() remains the same)
 func messageHandling() templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_messageHandling_807e`,
-		Function: `function __templ_messageHandling_807e(){htmx.on('#message-container', 'htmx:afterRequest', function(evt) {
+		Name: `__templ_messageHandling_7fc2`,
+		Function: `function __templ_messageHandling_7fc2(){// Initialize session check on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionId = sessionManager.getSessionId();
+        if (sessionId) {
+            const messageContainer = document.querySelector('#message-container');
+            if (messageContainer) {
+                messageContainer.setAttribute('data-session-id', sessionId);
+                htmx.trigger(messageContainer, 'load');
+            }
+        }
+    });
+
+    // Handle successful message loads
+    htmx.on('#message-container', 'htmx:afterRequest', function(evt) {
         if (evt.detail.successful) {
             const container = document.getElementById('message-container');
             if (container) {
@@ -163,6 +195,7 @@ func messageHandling() templ.ComponentScript {
         }
     });
 
+    // Add session ID to requests
     htmx.on('#message-container', 'htmx:beforeRequest', function(evt) {
         const sessionId = sessionManager.getSessionId();
         if (sessionId) {
@@ -181,7 +214,7 @@ func messageHandling() templ.ComponentScript {
         }
     });
 
-    // Refresh messages when tab becomes visible
+    // Update messages when tab becomes visible
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             const sessionId = sessionManager.getSessionId();
@@ -194,8 +227,8 @@ func messageHandling() templ.ComponentScript {
         }
     });
 }`,
-		Call:       templ.SafeScript(`__templ_messageHandling_807e`),
-		CallInline: templ.SafeScriptInline(`__templ_messageHandling_807e`),
+		Call:       templ.SafeScript(`__templ_messageHandling_7fc2`),
+		CallInline: templ.SafeScriptInline(`__templ_messageHandling_7fc2`),
 	}
 }
 
