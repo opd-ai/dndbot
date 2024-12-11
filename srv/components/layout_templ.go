@@ -33,7 +33,7 @@ func Layout() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html><head><title>D&D Adventure Generator</title><script src=\"https://unpkg.com/htmx.org@1.9.10\"></script><script src=\"https://unpkg.com/htmx.org/dist/ext/ws.js\"></script><link rel=\"stylesheet\" href=\"/static/styles.css\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html><head><title>D&D Adventure Generator</title><script src=\"https://unpkg.com/htmx.org@1.9.10\"></script><script src=\"https://unpkg.com/htmx.org/dist/ext/ws.js\"></script><script src=\"https://unpkg.com/htmx.org/dist/ext/json-enc.js\"></script><link rel=\"stylesheet\" href=\"/static/styles.css\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head><body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -41,7 +41,7 @@ func Layout() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script>\n                // Global message handler\n                htmx.logAll(); // Enable HTMX debugging\n                \n                // Handle page visibility\n                document.addEventListener('visibilitychange', function() {\n                    if (!document.hidden) {\n                        const wsOutput = document.getElementById('ws-output');\n                        if (wsOutput) {\n                            const sessionId = document.querySelector('[data-session-id]')?.dataset.sessionId;\n                            if (sessionId) {\n                                wsOutput.dispatchEvent(new Event('reload'));\n                            }\n                        }\n                    }\n                });\n            </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

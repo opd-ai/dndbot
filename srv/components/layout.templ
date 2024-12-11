@@ -8,11 +8,29 @@ templ Layout() {
             <title>D&D Adventure Generator</title>
             <script src="https://unpkg.com/htmx.org@1.9.10"></script>
             <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+            <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
             <link rel="stylesheet" href="/static/styles.css"/>
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         </head>
         <body>
             { children... }
+            <script>
+                // Global message handler
+                htmx.logAll(); // Enable HTMX debugging
+                
+                // Handle page visibility
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        const wsOutput = document.getElementById('ws-output');
+                        if (wsOutput) {
+                            const sessionId = document.querySelector('[data-session-id]')?.dataset.sessionId;
+                            if (sessionId) {
+                                wsOutput.dispatchEvent(new Event('reload'));
+                            }
+                        }
+                    }
+                });
+            </script>
         </body>
     </html>
 }

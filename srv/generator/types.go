@@ -124,8 +124,9 @@ func (gp *GenerationProgress) IsDone() bool {
 }
 
 type WSMessage struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message"`
-	Output  string `json:"output"`
+	Type      string    `json:"type"`
+	Status    string    `json:"status"`
+	Message   string    `json:"message"`
+	Output    string    `json:"output"`
+	Timestamp time.Time `json:"timestamp"`
 }

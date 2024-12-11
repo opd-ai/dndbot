@@ -1,68 +1,283 @@
 package components
 
+import (
+    "fmt"
+    "log"
+)
+
+// Helper function to log and return empty string
+func logf(format string, args ...interface{}) string {
+    log.Printf(format, args...)
+    return ""
+}
+
+// Helper function to log simple messages and return empty string
+func logln(msg string) string {
+    log.Println(msg)
+    return ""
+}
+
 templ GeneratorForm() {
     <div class="generator-container">
+        { logln("Rendering GeneratorForm") }
         <form id="generator-form" hx-post="/generate" hx-target="#generation-status">
             <textarea name="prompt" required placeholder="Enter your prompt..."></textarea>
             <button type="submit">Generate</button>
         </form>
-        <div id="generation-status"></div>
+        <div id="generation-status">
+            @GenerationStatus("")
+        </div>
     </div>
 }
 
-templ GenerationStatus(sessionID string) {
-    <div
-        id="ws-status"
-        hx-ext="ws"
-        ws-connect={ "/ws/" + sessionID }
-        class="generation-status"
+templ wsOutputContainer(sessionID string) {
+    { logf("Rendering wsOutputContainer for session: %s", sessionID) }
+    <div 
+        id="ws-output" 
+        class="output-container"
+        hx-get={ fmt.Sprintf("/api/messages/%s", sessionID) }
+        hx-trigger="load delay:100ms, every 2s"
+        hx-swap="innerHTML"
     >
-        <div id="ws-output" class="output-container">
-            <!-- Messages will be inserted here -->
-        </div>
-
-        <style>
-            .output-container {
-                min-height: 100px;
-                max-height: 400px;
-                overflow-y: auto;
-                padding: 1rem;
-                border: 1px solid #ccc;
-                margin-top: 1rem;
-                background: #f9f9f9;
-            }
-            .message {
-                margin-bottom: 0.5rem;
-                padding: 0.5rem;
-                border-left: 3px solid #ccc;
-                background: white;
-            }
-            .message.generating { border-color: #ffd700; }
-            .message.completed { border-color: #4caf50; }
-            .message.error { border-color: #f44336; }
-        </style>
-
-        <script>
-            document.addEventListener('htmx:wsAfterMessage', function(evt) {
-                try {
-                    const output = document.getElementById('ws-output');
-                    const data = JSON.parse(evt.detail.message);
-                    
-                    const div = document.createElement('div');
-                    div.className = `message ${data.status || 'generating'}`;
-                    div.innerHTML = `
-                        <strong>${data.status || 'generating'}</strong>
-                        <p>${data.message || ''}</p>
-                        ${data.output ? `<pre>${data.output}</pre>` : ''}
-                    `;
-                    
-                    output.appendChild(div);
-                    output.scrollTop = output.scrollHeight;
-                    
-                } catch (error) {
-                    console.error('Error processing message:', error);
-                }
-            });
-        </script>
+        <div class="loading">Loading messages...</div>
     </div>
+}
+
+templ wsStyles() {
+    { logln("Applying WebSocket styles") }
+    <style>
+        .output-container {
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            margin-top: 1rem;
+            background: #f9f9f9;
+            scroll-behavior: smooth;
+        }
+        .message {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-left: 3px solid #ccc;
+            background: white;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.generating { border-color: #ffd700; }
+        .message.completed { border-color: #4caf50; }
+        .message.error { border-color: #f44336; }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 1rem;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9em;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+        }
+        .message pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+    </style>
+}
+
+script wsHandling() {
+    console.log('Initializing WebSocket handling script');
+    
+    const state = {
+        messageCache: new Set(),
+        isConnected: false,
+        sessionId: document.querySelector('[data-session-id]')?.dataset.sessionId
+    };
+    console.log('Initial state:', { 
+        cacheSize: state.messageCache.size, 
+        isConnected: state.isConnected, 
+        sessionId: state.sessionId 
+    });
+
+    function initializeMessageHandling() {
+        console.log('Initializing message handling');
+        const output = document.getElementById('ws-output');
+        if (!output || !state.sessionId) {
+            console.warn('Missing output element or session ID');
+            return;
+        }
+        loadMessages();
+    }
+
+    function loadMessages() {
+        console.log('Loading messages for session:', state.sessionId);
+        const sessionId = state.sessionId;
+        if (!sessionId) {
+            console.warn('No session ID available');
+            return;
+        }
+
+        fetch(`/api/messages/${sessionId}`)
+            .then(response => {
+                console.log('Message fetch response status:', response.status);
+                return response.json();
+            })
+            .then(messages => {
+                console.log('Received messages:', messages.length);
+                const output = document.getElementById('ws-output');
+                if (!output) {
+                    console.warn('Output element not found');
+                    return;
+                }
+                output.innerHTML = '';
+                state.messageCache.clear();
+                messages.forEach(addMessageToOutput);
+            })
+            .catch(error => {
+                console.error('Error loading messages:', error);
+            });
+    }
+
+    function formatTimestamp(timestamp) {
+        console.debug('Formatting timestamp:', timestamp);
+        return new Date(timestamp).toLocaleTimeString(undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+
+    function getMessageId(data) {
+        const id = `${data.timestamp}-${data.status}-${data.message}`;
+        console.debug('Generated message ID:', id);
+        return id;
+    }
+
+    function addMessageToOutput(data) {
+        console.log('Adding message to output:', data);
+        const output = document.getElementById('ws-output');
+        if (!output) {
+            console.warn('Output element not found');
+            return;
+        }
+
+        const messageId = getMessageId(data);
+        if (state.messageCache.has(messageId)) {
+            console.debug('Message already exists:', messageId);
+            return;
+        }
+        state.messageCache.add(messageId);
+        console.debug('Cache size after add:', state.messageCache.size);
+
+        const div = document.createElement('div');
+        div.className = `message ${data.status || 'generating'}`;
+        div.setAttribute('data-message-id', messageId);
+        
+        div.innerHTML = `
+            <div class="message-header">
+                <strong>${data.status || 'generating'}</strong>
+                <span class="timestamp">${formatTimestamp(data.timestamp)}</span>
+            </div>
+            ${data.message ? `<p>${data.message}</p>` : ''}
+            ${data.output ? `<pre>${data.output}</pre>` : ''}
+        `;
+        
+        output.appendChild(div);
+        console.log('Message added to DOM:', messageId);
+        
+        requestAnimationFrame(() => {
+            output.scrollTop = output.scrollHeight;
+            console.debug('Scrolled to bottom');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM Content Loaded - initializing message handling');
+        initializeMessageHandling();
+    });
+
+    document.addEventListener('htmx:wsAfterMessage', function(evt) {
+        console.log('WebSocket message received:', evt.detail);
+        try {
+            const data = JSON.parse(evt.detail.message);
+            console.log('Parsed WebSocket message:', data);
+            addMessageToOutput(data);
+        } catch (error) {
+            console.error('Error processing WebSocket message:', error);
+            loadMessages();
+        }
+    });
+
+    ['wsConnecting', 'wsOpen', 'wsClose', 'wsError'].forEach(event => {
+        document.addEventListener(`htmx:${event}`, (evt) => {
+            console.log(`WebSocket ${event}:`, evt.detail);
+            if (event === 'wsOpen') {
+                state.isConnected = true;
+                console.log('WebSocket connected');
+                loadMessages();
+            } else if (event === 'wsClose' || event === 'wsError') {
+                state.isConnected = false;
+                console.log('WebSocket disconnected or error');
+                setTimeout(loadMessages, 1000);
+            }
+        });
+    });
+
+    document.addEventListener('visibilitychange', function() {
+        console.log('Visibility changed:', !document.hidden);
+        if (!document.hidden) {
+            loadMessages();
+        }
+    });
+
+    htmx.on('#ws-output', 'htmx:afterRequest', function(evt) {
+        console.log('HTMX after request:', evt.detail.xhr.status);
+        if (evt.detail.xhr.status === 200) {
+            try {
+                const messages = JSON.parse(evt.detail.xhr.responseText);
+                console.log('Received messages in HTMX request:', messages.length);
+                const output = document.getElementById('ws-output');
+                if (!output) {
+                    console.warn('Output element not found');
+                    return;
+                }
+                output.innerHTML = '';
+                state.messageCache.clear();
+                messages.forEach(addMessageToOutput);
+            } catch (error) {
+                console.error('Error parsing messages:', error);
+            }
+        }
+    });
+}
+
+templ GenerationStatus(sessionID string) {
+    { logf("Rendering GenerationStatus for session: %s", sessionID) }
+    if sessionID != "" {
+        <div
+            id="ws-status"
+            hx-ext="ws,json-enc"
+            ws-connect={ fmt.Sprintf("/ws/%s", sessionID) }
+            class="generation-status"
+            data-session-id={ sessionID }
+        >
+            @wsOutputContainer(sessionID)
+            @wsStyles()
+            @wsHandling()
+        </div>
+    } else {
+        { logln("Warning: Empty sessionID in GenerationStatus") }
+    }
 }

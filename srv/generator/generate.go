@@ -141,15 +141,12 @@ func ZipOutputDirectory(outDir string) (zipPath string, err error) {
 			return fmt.Errorf("absolute path error: %s", path)
 		}
 		fmt.Printf("Crawling: %#v\n", path)
-		if err != nil {
-			return err
-		}
 		if info.IsDir() {
 			return nil
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("error crawling file: %s err: %s", path, err)
 		}
 		defer file.Close()
 
@@ -165,7 +162,7 @@ func ZipOutputDirectory(outDir string) (zipPath string, err error) {
 
 		return nil
 	}
-	err = filepath.Walk("input", walker)
+	err = filepath.Walk(outDir, walker)
 	if err != nil {
 		return
 	}
