@@ -1,9 +1,8 @@
 package ui
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"strings"
@@ -234,7 +233,7 @@ func (ui *GeneratorUI) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
+/*func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
 	sessionID := chi.URLParam(r, "sessionID")
 	log.Printf("[DEBUG] Starting handleGetMessages for session: %s", sessionID)
 
@@ -278,6 +277,23 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 		}
 		log.Printf("[DEBUG] Successfully sent messages for session: %s", sessionID)
 	}
+}*/
+
+func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "sessionID")
+
+	ui.sessionsM.RLock()
+	history, exists := ui.msgHistory[sessionID]
+	ui.sessionsM.RUnlock()
+
+	if !exists {
+		w.Write([]byte(""))
+		return
+	}
+
+	messages := history.GetMessages()
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(formatMessages(messages)))
 }
 
 // Add this to handlers.go
@@ -319,6 +335,7 @@ func isValidSession(sessionID string) bool {
 	return err == nil
 }
 
+// formatMessages formats a slice of WebSocket messages into HTML
 func formatMessages(messages []generator.WSMessage) string {
 	var html strings.Builder
 	for _, msg := range messages {
@@ -340,4 +357,24 @@ func formatMessages(messages []generator.WSMessage) string {
 		))
 	}
 	return html.String()
+}
+
+// formatContent formats the message content with proper HTML escaping
+func formatContent(content string) string {
+	if content == "" {
+		return ""
+	}
+	// Escape HTML special characters to prevent XSS
+	escaped := html.EscapeString(content)
+	return fmt.Sprintf("<p class=\"message-content\">%s</p>", escaped)
+}
+
+// formatOutput formats the output content with proper HTML escaping
+func formatOutput(output string) string {
+	if output == "" {
+		return ""
+	}
+	// Escape HTML special characters to prevent XSS
+	escaped := html.EscapeString(output)
+	return fmt.Sprintf("<pre class=\"message-output\">%s</pre>", escaped)
 }
