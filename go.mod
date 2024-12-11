@@ -9,7 +9,7 @@ require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/opd-ai/paywall v0.0.0-20241211225719-5171c40190d9
+	github.com/opd-ai/paywall 259ad0a0a7a1d2e1e0f99636c3f3df708465b8ab
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 )
 
