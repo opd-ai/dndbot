@@ -1,24 +1,61 @@
-/* static/styles.css */
 :root {
-    --primary-color: #4CAF50;
-    --background-color: #ffffff;
-    --text-color: #333333;
-    --border-color: #dddddd;
+    --primary-dark: #1a1a1a;
+    --accent-purple: #6b2c91;
+    --accent-gold: #c9a959;
+    --text-light: #e1e1e1;
+    --shadow: rgba(0, 0, 0, 0.7);
+    --input-bg: rgba(0, 0, 0, 0.2);
 }
 
-.container {
+/* Base Layout */
+body {
+    font-family: 'Crimson Text', serif;
+    background: var(--primary-dark);
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0;
+}
+
+header {
+    min-height: 70vh;
+    background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+main {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
+/* Typography */
+h1, h2, h3 {
+    font-family: 'MedievalSharp', cursive;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    text-shadow: 3px 3px 6px var(--shadow);
+}
+
+/* Form Elements */
+form {
+    background: var(--input-bg);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--accent-gold);
 }
 
 label {
     display: block;
     margin-bottom: 0.5rem;
+    color: var(--accent-gold);
     font-weight: bold;
 }
 
@@ -26,62 +63,103 @@ textarea {
     width: 100%;
     min-height: 120px;
     padding: 0.75rem;
-    border: 2px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--accent-purple);
     border-radius: 4px;
+    color: var(--text-light);
+    font-family: 'Crimson Text', serif;
     font-size: 1rem;
     resize: vertical;
 }
 
+textarea:focus {
+    border-color: var(--accent-gold);
+    outline: none;
+}
+
+/* Buttons and Interactive Elements */
 button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--primary-color);
-    color: white;
+    background: var(--accent-purple);
+    color: var(--text-light);
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 4px;
+    font-size: 1.1rem;
     cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
 }
 
 button:hover {
-    background-color: #45a049;
+    background: var(--accent-gold);
+    transform: translateY(-2px);
 }
 
+/* Content Sections */
+section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--accent-purple);
+}
+
+/* Feature Lists */
+ul, ol {
+    list-style-position: inside;
+    padding-left: 1rem;
+}
+
+li {
+    margin: 0.5rem 0;
+    color: var(--text-light);
+}
+
+li::marker {
+    color: var(--accent-gold);
+}
+
+/* Status Indicators */
 .status-container {
-    margin-top: 2rem;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    border: 1px solid var(--accent-purple);
     border-radius: 4px;
-    background-color: #f9f9f9;
-}
-
-.generation-status {
     padding: 1rem;
-}
-
-.status-message {
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
+    margin-top: 1.5rem;
 }
 
 .htmx-indicator {
     display: none;
-    animation: spin 1s linear infinite;
+    color: var(--accent-gold);
 }
 
 .htmx-request .htmx-indicator {
     display: inline-block;
 }
 
-@keyframes spin {
-    100% { transform: rotate(360deg); }
+/* Quotes and Highlights */
+blockquote {
+    border-left: 3px solid var(--accent-purple);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    background: var(--input-bg);
 }
 
-@media (max-width: 600px) {
-    .container {
+strong {
+    color: var(--accent-gold);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+    }
+    
+    form {
+        padding: 1rem;
+    }
+    
+    section {
         padding: 1rem;
     }
 }

@@ -1,13 +1,14 @@
 package ui
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"github.com/opd-ai/dndbot/srv/components"
 	"github.com/opd-ai/dndbot/srv/generator"
 )
@@ -17,6 +18,7 @@ func (ui *GeneratorUI) handleHome(w http.ResponseWriter, r *http.Request) {
 	components.GeneratorForm().Render(r.Context(), w)
 }
 
+// srv/ui/handlers.go
 func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -29,26 +31,20 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for existing valid session
-	var sessionID string
-	if cookie, err := r.Cookie("session_id"); err == nil && isValidSession(cookie.Value) {
-		sessionID = cookie.Value
-	} else {
-		// Create new session if none exists or invalid
-		sessionID = uuid.New().String()
-	}
+	// Create new session
+	sessionID := uuid.New().String()
 	w.Header().Set("X-Session-Id", sessionID)
 
-	// Set or update session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
 		Path:     "/",
-		MaxAge:   86400, // 24 hours
+		MaxAge:   86400,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
 
+	// Create progress object
 	progress := &generator.GenerationProgress{
 		SessionID: sessionID,
 		Done:      make(chan bool),
@@ -59,7 +55,6 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 
 	ui.sessionsM.Lock()
 	ui.sessions[sessionID] = progress
-	// Initialize message history if it doesn't exist
 	if _, exists := ui.msgHistory[sessionID]; !exists {
 		ui.msgHistory[sessionID] = &MessageHistory{
 			Messages: make([]generator.WSMessage, 0),
@@ -67,168 +62,36 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 	ui.sessionsM.Unlock()
 
-	// Initialize message history for new session
-	if _, exists := ui.msgHistory[sessionID]; !exists {
-		ui.msgHistory[sessionID] = &MessageHistory{
-			Messages: make([]generator.WSMessage, 0),
-		}
-	}
-
+	// Wait for WebSocket connection before starting generation
 	go func() {
-		defer func() {
-			ui.cleanupSession(sessionID, progress)
-		}()
+		// Wait up to 5 seconds for WebSocket connection
+		timeout := time.After(5 * time.Second)
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
 
-		progress.UpdateState(generator.StateGenerating)
-		if err := generator.GenerateAdventure(progress, prompt); err != nil {
-			progress.UpdateState(generator.StateError)
-			progress.Error = err
-			return
+		for {
+			select {
+			case <-timeout:
+				log.Printf("Timeout waiting for WebSocket connection for session %s", sessionID)
+				return
+			case <-ticker.C:
+				progress.Lock()
+				if progress.WSConn != nil {
+					progress.Unlock()
+					// Start generation once we have a WebSocket connection
+					if err := generator.GenerateAdventure(progress, prompt); err != nil {
+						log.Printf("Generation error: %v", err)
+						progress.UpdateState(generator.StateError)
+						progress.SendUpdate(fmt.Sprintf("Error: %v", err))
+					}
+					return
+				}
+				progress.Unlock()
+			}
 		}
-
-		progress.UpdateState(generator.StateCompleted)
 	}()
 
 	components.GenerationStatus(sessionID).Render(r.Context(), w)
-}
-
-func (ui *GeneratorUI) handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		log.Printf("No session cookie found: %v", err)
-		http.Error(w, "No session found", http.StatusBadRequest)
-		return
-	}
-
-	sessionID := cookie.Value
-	if !isValidSession(sessionID) {
-		http.Error(w, "Invalid session", http.StatusBadRequest)
-		return
-	}
-
-	ui.sessionsM.RLock()
-	progress, exists := ui.sessions[sessionID]
-	ui.sessionsM.RUnlock()
-
-	if !exists {
-		// Check cache for completed session
-		if cachedProgress, found := ui.cache.Get(sessionID); found {
-			progress = cachedProgress.(*generator.GenerationProgress)
-		} else {
-			http.Error(w, "Session not found", http.StatusNotFound)
-			return
-		}
-	}
-
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("WebSocket upgrade failed: %v", err)
-		http.Error(w, "Could not upgrade connection", http.StatusInternalServerError)
-		return
-	}
-
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("Error closing WebSocket connection: %v", err)
-		}
-		progress.Lock()
-		progress.WSConn = nil
-		progress.Unlock()
-	}()
-
-	conn.SetReadLimit(4096)
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-	conn.SetPongHandler(func(string) error {
-		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-	})
-
-	// Send historical messages
-	if history, exists := ui.msgHistory[sessionID]; exists {
-		history.mu.RLock()
-		for _, msg := range history.Messages {
-			if err := conn.WriteJSON(msg); err != nil {
-				log.Printf("Failed to send historical message: %v", err)
-			}
-		}
-		history.mu.RUnlock()
-	}
-
-	progress.Lock()
-	if progress.WSConn != nil {
-		if err := progress.WSConn.Close(); err != nil {
-			log.Printf("Error closing existing WebSocket connection: %v", err)
-		}
-	}
-	progress.WSConn = conn
-	progress.Unlock()
-
-	updates := make(chan generator.WSMessage, 10)
-	defer close(updates)
-
-	initialMsg := generator.WSMessage{
-		Type:    "update",
-		Status:  "connected",
-		Message: "Connection established",
-		Output:  "🎲 Initializing adventure generation...",
-	}
-
-	if err := conn.WriteJSON(initialMsg); err != nil {
-		log.Printf("Failed to send initial message: %v", err)
-		return
-	}
-
-	ui.AddMessage(sessionID, initialMsg)
-
-	go func() {
-		for msg := range updates {
-			if err := conn.WriteJSON(msg); err != nil {
-				log.Printf("Failed to send message: %v", err)
-				return
-			}
-			ui.AddMessage(sessionID, msg)
-		}
-	}()
-
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	done := make(chan struct{})
-	defer close(done)
-
-	go func() {
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-					return
-				}
-			case <-done:
-				return
-			}
-		}
-	}()
-
-	for {
-		messageType, _, err := conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket error: %v", err)
-			}
-			break
-		}
-		if messageType == websocket.CloseMessage {
-			break
-		}
-	}
 }
 
 func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request) {
@@ -275,4 +138,14 @@ func (ui *GeneratorUI) handleCheckSession(w http.ResponseWriter, r *http.Request
 	}
 
 	components.GenerationStatus(sessionID).Render(r.Context(), w)
+}
+
+func handleFavicon(w http.ResponseWriter, r *http.Request) {
+	faviconBytes, err := os.ReadFile("static/favicon.ico")
+	if err != nil {
+		log.Printf("favicon error %s", err)
+		w.Write([]byte("XXXXXXXXXXXXXXXXXXXXXXX"))
+		return
+	}
+	w.Write(faviconBytes)
 }

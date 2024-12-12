@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -16,7 +17,6 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/opd-ai/dndbot/srv/generator"
-	"github.com/opd-ai/paywall"
 )
 
 type GeneratorUI struct {
@@ -28,6 +28,7 @@ type GeneratorUI struct {
 	historyFile string
 }
 
+// srv/ui/ui.go
 func NewGeneratorUI() *GeneratorUI {
 	ui := &GeneratorUI{
 		router:      chi.NewRouter(),
@@ -36,6 +37,13 @@ func NewGeneratorUI() *GeneratorUI {
 		cache:       cache.New(24*time.Hour, 1*time.Hour),
 		historyFile: "session_history.json",
 	}
+
+	// Set up message emitter
+	generator.SetMessageEmitter(func(sessionID string, msg generator.WSMessage) error {
+		ui.AddMessage(sessionID, msg)
+		return nil
+	})
+
 	ui.loadHistory()
 	ui.setupRoutes()
 	ui.startCleanup()
@@ -215,19 +223,83 @@ func (ui *GeneratorUI) setupRoutes() {
 			next.ServeHTTP(w, r)
 		})
 	})
-	pw, err := paywall.ConstructPaywall()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//pw, err := paywall.ConstructPaywall()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	ui.router.Post("/generate", pw.MiddlewareFuncFunc(ui.handleGenerate))
+	//ui.router.Post("/generate", pw.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
+	//ui.router.Post("/generate", rateLimit(ui.handleGenerate))
+	ui.router.Post("/generate", ui.handleGenerate)
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)
 	ui.router.Get("/check-session", ui.handleCheckSession)
 
 	fileServer := http.FileServer(http.Dir("static"))
 	ui.router.Handle("/static/*", http.StripPrefix("/static/", fileServer))
+	ui.router.Get("/favicon.ico", handleFavicon)
 	outputServer := http.FileServer(http.Dir("outputs"))
 	ui.router.Handle("/outputs/*", http.StripPrefix("/outputs/", outputServer))
+}
+
+type logRequest []time.Time
+
+func (l *logRequest) update() error {
+	return nil
+}
+
+func newLogRequest() logRequest {
+	var lr []time.Time
+	lr = append(lr, time.Now())
+	return lr
+}
+
+func (l logRequest) limit() bool {
+	count := 0
+	for i := range l {
+		reversei := len(l) - 1 - i
+		lastTime := l[reversei]
+		fourHoursAgo := time.Now().Add(time.Duration(-4) * time.Hour)
+		if lastTime.After(fourHoursAgo) {
+			count++
+		}
+		if count >= 2 {
+			return true
+		}
+	}
+	return false
+}
+
+var loggedRequests map[net.Addr]logRequest
+
+func init() {
+	loggedRequests = make(map[net.Addr]logRequest)
+}
+
+func rateLimit(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		remoteIP := r.Header.Get("REMOTE_ADDR")
+		if limit, err := exceededTheLimit(remoteIP); err != nil || limit {
+			w.WriteHeader(429)
+			// it then returns, not passing the request down the chain
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	}
+}
+
+func exceededTheLimit(remoteIP string) (bool, error) {
+	ipAddr, err := net.ResolveIPAddr("ip", remoteIP)
+	if err != nil {
+		return true, err
+	}
+	logs, ok := loggedRequests[ipAddr]
+	if !ok {
+
+		loggedRequests[ipAddr] = newLogRequest()
+		return false, nil
+	}
+	return logs.limit(), nil
 }

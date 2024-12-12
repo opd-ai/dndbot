@@ -37,4 +37,33 @@ func messageStyles() templ.Component {
 	})
 }
 
+func messageIntro() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var2 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var2 == nil {
+			templ_7745c5c3_Var2 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div><h1 id=\"welcome-to-dndbot\">Welcome to DNDBot 🎲✨</h1><p>Transform your ideas into fully-fledged D&amp;D adventures with the power of AI! DNDBot is your creative companion for generating rich, detailed tabletop RPG content that’s ready to play.</p><p>💎 <strong>Generation Cost: 0.0001 BTC</strong> - Pay-per-generation model - No subscription required - Lightning Network enabled - Instant delivery upon payment</p><h2 id=\"what-can-dndbot-create\">What Can DNDBot Create?</h2><p>📖 <strong>Complete Adventures</strong> - Detailed narratives and storylines - Engaging NPCs and villains - Balanced encounters and challenges - Custom dungeons and locations - Treasure and reward tables</p><p>🎨 <strong>Rich Details</strong> - Setting descriptions - Character backgrounds - Monster stat blocks - Illustration prompts - Maps and layouts</p><h2 id=\"how-it-works\">How It Works</h2><ol type=\"1\"><li><p><strong>Describe Your Vision</strong> Share your adventure idea in plain English. Whether it’s a desert tomb raid or an urban heist, DNDBot understands your creative direction.</p></li><li><p><strong>Complete Payment</strong> Send 0.0001 BTC to start the generation process. Payment is verified instantly upon reciept.</p></li><li><p><strong>Watch It Generate</strong> See your adventure take shape in real-time as our AI crafts each component, from the opening hook to the final encounter.</p></li><li><p><strong>Download &amp; Play</strong> Get a complete, organized adventure package ready for your next gaming session. All content is copyright-safe and ready to use!</p></li></ol><h2 id=\"get-started-now\">Get Started Now</h2><p>Just enter your adventure concept below and let DNDBot handle the rest. Need inspiration? Try one of these prompts:</p><ul><li>“A mysterious plague is turning villagers to stone”</li><li>“Ancient dragons awaken beneath a frozen city”</li><li>“A carnival of illusions holds dark secrets”</li></ul><p><em>Your next epic adventure awaits… for just 0.0001 BTC!</em> ⚡️</p><p><strong>Note</strong>: All generations are stored for 24 hours and can be re-downloaded within that period at no additional cost.</p></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
 var _ = templruntime.GeneratedTemplate

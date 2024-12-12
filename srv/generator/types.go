@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -43,24 +42,34 @@ func (gp *GenerationProgress) Close() {
 	}
 }
 
-// In your GenerationProgress struct
+// srv/generator/types.go
 func (p *GenerationProgress) SendUpdate(message string) error {
 	p.Lock()
 	defer p.Unlock()
 
-	if p.WSConn == nil {
-		return fmt.Errorf("no WebSocket connection")
-	}
-
 	msg := WSMessage{
-		Type:    "update",
-		Status:  string(p.State),
-		Message: message,
-		Output:  p.Output,
+		Type:      "update",
+		Status:    string(p.State),
+		Message:   message,
+		Output:    p.Output,
+		Timestamp: time.Now(),
 	}
 
-	log.Printf("Sending update: %+v", msg)
-	return p.WSConn.WriteJSON(msg)
+	if p.WSConn != nil {
+		if err := p.WSConn.WriteJSON(msg); err != nil {
+			log.Printf("[Session %s] Failed to send message: %v", p.SessionID, err)
+			return err
+		}
+	} else {
+		log.Printf("[Session %s] Buffering message: %s (no WebSocket)", p.SessionID, message)
+	}
+
+	// Always emit the message for history
+	if err := wsEmitMessage(p.SessionID, msg); err != nil {
+		log.Printf("[Session %s] Failed to emit message: %v", p.SessionID, err)
+	}
+
+	return nil
 }
 
 func (p *GenerationProgress) UpdateState(state GenerationState) {
@@ -129,4 +138,31 @@ type WSMessage struct {
 	Message   string    `json:"message"`
 	Output    string    `json:"output"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+// srv/generator/types.go
+func NewWSMessage(msgType, status, message, output string) WSMessage {
+	return WSMessage{
+		Type:      msgType,
+		Status:    status,
+		Message:   message,
+		Output:    output,
+		Timestamp: time.Now(),
+	}
+}
+
+// srv/generator/types.go
+var (
+	messageEmitter func(sessionID string, msg WSMessage) error
+)
+
+func wsEmitMessage(sessionID string, msg WSMessage) error {
+	if messageEmitter != nil {
+		return messageEmitter(sessionID, msg)
+	}
+	return nil
+}
+
+func SetMessageEmitter(emitter func(sessionID string, msg WSMessage) error) {
+	messageEmitter = emitter
 }
