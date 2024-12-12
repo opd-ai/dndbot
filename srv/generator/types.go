@@ -55,18 +55,22 @@ func (p *GenerationProgress) SendUpdate(message string) error {
 		Timestamp: time.Now(),
 	}
 
-	if p.WSConn != nil {
-		if err := p.WSConn.WriteJSON(msg); err != nil {
-			log.Printf("[Session %s] Failed to send message: %v", p.SessionID, err)
-			return err
+	// Always emit the message to history first
+	if messageEmitter != nil {
+		if err := messageEmitter(p.SessionID, msg); err != nil {
+			log.Printf("[Session %s] Failed to emit message to history: %v", p.SessionID, err)
 		}
-	} else {
-		log.Printf("[Session %s] Buffering message: %s (no WebSocket)", p.SessionID, message)
 	}
 
-	// Always emit the message for history
-	if err := wsEmitMessage(p.SessionID, msg); err != nil {
-		log.Printf("[Session %s] Failed to emit message: %v", p.SessionID, err)
+	// Try to send via WebSocket if available
+	if p.WSConn != nil {
+		if err := p.WSConn.WriteJSON(msg); err != nil {
+			log.Printf("[Session %s] Failed to send WebSocket message: %v", p.SessionID, err)
+			return err
+		}
+		log.Printf("[Session %s] Message sent via WebSocket: %s", p.SessionID, message)
+	} else {
+		log.Printf("[Session %s] Message queued (no WebSocket): %s", p.SessionID, message)
 	}
 
 	return nil
