@@ -17,6 +17,9 @@ templ GenerationStatus(sessionID string) {
             </div>
             @messageStyles()
             <script>
+                @messageHandling()
+            </script>
+            <script>
                 (function() {
                     const outputElement = document.getElementById('generation-output');
                     const sessionID = outputElement ? outputElement.getAttribute('data-session-id') : '';
