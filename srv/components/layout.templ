@@ -27,9 +27,27 @@ templ Layout() {
                             htmx.trigger(container, 'load');
                         }
                     },
-                    clearSession: () => localStorage.removeItem('sessionId'),
-                    initializeSession: function() {
-                        const sessionId = this.getSessionId();
+                    clearSession: () => localStorage.removeItem('sessionId')
+                };
+
+                // Initialize session on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    const sessionId = sessionManager.getSessionId();
+                    if (sessionId) {
+                        htmx.ajax('GET', '/check-session', {
+                            headers: {
+                                'X-Session-Id': sessionId
+                            },
+                            target: '#generation-status',
+                            swap: 'innerHTML'
+                        });
+                    }
+                });
+
+                // Handle visibility changes
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        const sessionId = sessionManager.getSessionId();
                         if (sessionId) {
                             htmx.ajax('GET', '/check-session', {
                                 headers: {
@@ -40,21 +58,9 @@ templ Layout() {
                             });
                         }
                     }
-                };
-
-                // Initialize on page load
-                document.addEventListener('DOMContentLoaded', function() {
-                    sessionManager.initializeSession();
                 });
 
-                // Handle visibility changes
-                document.addEventListener('visibilitychange', function() {
-                    if (!document.hidden) {
-                        sessionManager.initializeSession();
-                    }
-                });
-
-                // Enable HTMX debugging
+                // Enable HTMX debugging (optional)
                 htmx.logAll();
             </script>
         </body>

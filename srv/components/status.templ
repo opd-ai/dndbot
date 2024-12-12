@@ -1,0 +1,83 @@
+package components
+
+import "fmt"
+
+// srv/components/generator.templ
+templ GenerationStatus(sessionID string) {
+    if sessionID != "" {
+        <div
+            id="generation-output"
+            class="generation-status"
+            data-session-id={ sessionID }
+            hx-ext="ws"
+            ws-connect={ fmt.Sprintf("/ws/%s", sessionID) }
+        >
+            <div id="message-container" class="message-output">
+                <div class="loading">Connecting to server...</div>
+            </div>
+            @messageStyles()
+            <script>
+                (function() {
+                    const outputElement = document.getElementById('generation-output');
+                    const sessionID = outputElement ? outputElement.getAttribute('data-session-id') : '';
+                    console.log("Setting up WebSocket handlers for session:", sessionID);
+                    
+                    htmx.on('#generation-output', 'ws-open', function(evt) {
+                        console.log("WebSocket connected for session:", sessionID);
+                    });
+
+                    htmx.on('#generation-output', 'ws-message', function(evt) {
+                        console.log("WebSocket message received for session:", sessionID, evt.detail.message);
+                        
+                        try {
+                            const message = JSON.parse(evt.detail.message);
+                            const container = document.querySelector('#message-container');
+                            
+                            if (container) {
+                                // Clear loading message on first real message
+                                if (container.querySelector('.loading')) {
+                                    container.innerHTML = '';
+                                }
+
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = `message ${message.status || ''}`;
+                                messageDiv.innerHTML = `
+                                    <div class="message-header">
+                                        <span>${message.status || 'update'}</span>
+                                        <span>${new Date(message.timestamp).toLocaleTimeString()}</span>
+                                    </div>
+                                    ${message.message ? `<p class="message-content">${message.message}</p>` : ''}
+                                    ${message.output ? `<pre class="message-output">${message.output}</pre>` : ''}
+                                `;
+                                
+                                container.appendChild(messageDiv);
+                                container.scrollTop = container.scrollHeight;
+                                console.log("Message added to container:", message);
+                            } else {
+                                console.error("Message container not found");
+                            }
+                        } catch (error) {
+                            console.error("Error processing message:", error, evt.detail);
+                        }
+                    });
+
+                    htmx.on('#generation-output', 'ws-error', function(evt) {
+                        console.error("WebSocket error for session:", sessionID, evt);
+                        const container = document.querySelector('#message-container');
+                        if (container) {
+                            container.innerHTML += '<div class="message error">Connection error occurred</div>';
+                        }
+                    });
+
+                    htmx.on('#generation-output', 'ws-close', function(evt) {
+                        console.log("WebSocket closed for session:", sessionID);
+                        const container = document.querySelector('#message-container');
+                        if (container) {
+                            container.innerHTML += '<div class="message">Connection closed</div>';
+                        }
+                    });
+                })();
+            </script>
+        </div>
+    }
+}

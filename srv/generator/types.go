@@ -76,14 +76,24 @@ func (p *GenerationProgress) SendUpdate(message string) error {
 	return nil
 }
 
+// srv/generator/types.go
+func (p *GenerationProgress) UpdateOutput(output string) {
+	p.Lock()
+	p.Output = output
+	p.Unlock()
+
+	log.Printf("[Session %s] Updating output: %s", p.SessionID, output)
+	p.SendUpdate("Updating adventure content...")
+}
+
 func (p *GenerationProgress) UpdateState(state GenerationState) {
 	p.Lock()
 	oldState := p.State
 	p.State = state
-	log.Printf("State transition: %s -> %s", oldState, state)
 	p.Unlock()
 
-	// Send state update via WebSocket
+	log.Printf("[Session %s] State transition: %s -> %s", p.SessionID, oldState, state)
+
 	message := ""
 	switch state {
 	case StateGenerating:
@@ -94,14 +104,9 @@ func (p *GenerationProgress) UpdateState(state GenerationState) {
 		message = "❌ Error generating adventure"
 	}
 
-	p.SendUpdate(message)
-}
-
-func (p *GenerationProgress) UpdateOutput(output string) {
-	p.Lock()
-	p.Output = output
-	p.Unlock()
-	p.SendUpdate("Updating adventure content...")
+	if message != "" {
+		p.SendUpdate(message)
+	}
 }
 
 func (p *GenerationProgress) SetActive(active bool) {
