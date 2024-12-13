@@ -230,8 +230,8 @@ func (ui *GeneratorUI) setupRoutes() {
 
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	//ui.router.Post("/generate", pw.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
-	//ui.router.Post("/generate", rateLimit(ui.handleGenerate))
+	// ui.router.Post("/generate", pw.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
+	// ui.router.Post("/generate", rateLimit(ui.handleGenerate))
 	ui.router.Post("/generate", ui.handleGenerate)
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)

@@ -4,44 +4,48 @@ package components
 import "fmt"
 
 templ GeneratorForm() {
-    <div class="generator-container">
-        <form 
-            id="generator-form" 
-            hx-post="/generate" 
-            hx-target="#generation-status"
-            hx-on::after-request="
+	<div class="generator-container">
+		<form
+			id="generator-form"
+			hx-post="/generate"
+			hx-target="#generation-status"
+			hx-on::after-request="
                 if (event.detail && event.detail.xhr) {
                     const sessionId = event.detail.xhr.getResponseHeader('X-Session-Id');
                     if (sessionId) {
-                        sessionManager.setSessionId(sessionId);
+                        localStorage.setItem('sessionId', sessionId);
                     }
+                    sessionID = sessionId;
                 }
             "
-        >
-            @messageIntro()
-            <textarea 
-                name="prompt" 
-                required 
-                placeholder="Enter your prompt..."
-                class="w-full p-2 border rounded"
-            ></textarea>
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">
-                Generate
-            </button>
-        </form>
-        <div id="generation-status" hx-trigger="load" hx-get="/check-session"></div>
-    </div>
+		>
+			@messageIntro()
+			<textarea
+				name="prompt"
+				required
+				placeholder="Enter your prompt..."
+				class="w-full p-2 border rounded"
+			></textarea>
+			<button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">
+				Generate
+			</button>
+		</form>
+		@messageContainer(sessionID)
+		<div id="generation-status" hx-trigger="load" hx-get="/check-session"></div>
+	</div>
 }
 
+var sessionID string
+
 templ messageContainer(sessionID string) {
-    <div 
-        id="message-container" 
-        class="message-output"
-        data-session-id={ sessionID }
-        hx-get={ fmt.Sprintf("/api/messages/%s", sessionID) }
-        hx-trigger="load delay:500ms, every 2s"
-        hx-swap="innerHTML"
-    >
-        <div class="loading">Loading messages...</div>
-    </div>
+	<div
+		id="message-container"
+		class="message-output"
+		data-session-id={ sessionID }
+		hx-get={ fmt.Sprintf("/api/messages/%s", sessionID) }
+		hx-trigger="load delay:500ms, every 2s"
+		hx-swap="innerHTML"
+	>
+		<div class="loading">Loading messages...</div>
+	</div>
 }

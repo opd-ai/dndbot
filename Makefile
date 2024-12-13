@@ -8,7 +8,8 @@ run: build
 	./dndbotwww
 
 clean:
-	rm -f dndbotwww
+	rm -frv dndbotwww srv/components/*.go
 
 fmt:
 	find . -name '*.go' -exec gofumpt -w -s -extra {} \;
+	find . -name '*.templ' -exec templ fmt -w 16 {} \;

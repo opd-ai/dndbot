@@ -2,67 +2,19 @@
 package components
 
 templ Layout() {
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>D&D Adventure Generator</title>
-            <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-            <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-            <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
-            <link rel="stylesheet" href="/static/styles.css"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        </head>
-        <body>
-            { children... }
-            <script>
-                // Session management
-                const sessionManager = {
-                    getSessionId: () => localStorage.getItem('sessionId'),
-                    setSessionId: (id) => {
-                        localStorage.setItem('sessionId', id);
-                        // Trigger message container reload when session is set
-                        const container = document.getElementById('message-container');
-                        if (container) {
-                            container.setAttribute('data-session-id', id);
-                            htmx.trigger(container, 'load');
-                        }
-                    },
-                    clearSession: () => localStorage.removeItem('sessionId')
-                };
-
-                // Initialize session on page load
-                document.addEventListener('DOMContentLoaded', function() {
-                    const sessionId = sessionManager.getSessionId();
-                    if (sessionId) {
-                        htmx.ajax('GET', '/check-session', {
-                            headers: {
-                                'X-Session-Id': sessionId
-                            },
-                            target: '#generation-status',
-                            swap: 'innerHTML'
-                        });
-                    }
-                });
-
-                // Handle visibility changes
-                document.addEventListener('visibilitychange', function() {
-                    if (!document.hidden) {
-                        const sessionId = sessionManager.getSessionId();
-                        if (sessionId) {
-                            htmx.ajax('GET', '/check-session', {
-                                headers: {
-                                    'X-Session-Id': sessionId
-                                },
-                                target: '#generation-status',
-                                swap: 'innerHTML'
-                            });
-                        }
-                    }
-                });
-
-                // Enable HTMX debugging (optional)
-                htmx.logAll();
-            </script>
-        </body>
-    </html>
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>D&D Adventure Generator</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+			<link rel="stylesheet" href="/static/styles.css" defer/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		</head>
+		<body>
+			{ children... }
+			@sessionManager()
+		</body>
+	</html>
 }

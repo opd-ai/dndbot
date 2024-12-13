@@ -1,0 +1,52 @@
+// srv/components/session.templ
+package components
+
+script sessionManager() {
+    // Session management
+    const sessionManager = {
+        getSessionId: () => localStorage.getItem('sessionId'),
+        setSessionId: (id) => {
+            localStorage.setItem('sessionId', id);
+            // Trigger message container reload when session is set
+            const container = document.getElementById('message-container');
+            if (container) {
+                container.setAttribute('data-session-id', id);
+                htmx.trigger(container, 'load');
+            }
+        },
+        clearSession: () => localStorage.removeItem('sessionId')
+    };
+
+    // Initialize session on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const sessionId = sessionManager.getSessionId();
+        if (sessionId) {
+            htmx.ajax('GET', '/check-session', {
+                headers: {
+                    'X-Session-Id': sessionId
+                },
+                target: '#generation-status',
+                swap: 'innerHTML'
+            });
+        }
+    });
+
+    // Handle visibility changes
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            const sessionId = sessionManager.getSessionId();
+            if (sessionId) {
+                htmx.ajax('GET', '/check-session', {
+                    headers: {
+                        'X-Session-Id': sessionId
+                    },
+                    target: '#generation-status',
+                    swap: 'innerHTML'
+                });
+            }
+        }
+    });
+
+    // Enable HTMX debugging (optional)
+    htmx.logAll();
+}
