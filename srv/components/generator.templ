@@ -15,7 +15,6 @@ templ GeneratorForm() {
                     if (sessionId) {
                         localStorage.setItem('sessionId', sessionId);
                     }
-                    sessionID = sessionId;
                 }
             "
 		>
@@ -30,6 +29,7 @@ templ GeneratorForm() {
 				Generate
 			</button>
 		</form>
+		sessionID = localStorage.getItem('sessionId')
 		@messageContainer(sessionID)
 		<div id="generation-status" hx-trigger="load" hx-get="/check-session"></div>
 	</div>
