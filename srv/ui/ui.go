@@ -1,4 +1,4 @@
-// srv/ui/ui.go
+// Package ui provides the web user interface and HTTP handlers for the DND bot generator
 package ui
 
 import (
@@ -17,8 +17,11 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/opd-ai/dndbot/srv/generator"
+	"github.com/opd-ai/paywall"
 )
 
+// GeneratorUI manages the web interface for the DND adventure generator.
+// It handles session management, message history, and HTTP routing.
 type GeneratorUI struct {
 	router      chi.Router
 	sessions    map[string]*generator.GenerationProgress
@@ -26,9 +29,16 @@ type GeneratorUI struct {
 	msgHistory  map[string]*MessageHistory
 	cache       *cache.Cache
 	historyFile string
+	zoltar      *paywall.Paywall
 }
 
-// srv/ui/ui.go
+// NewGeneratorUI creates and initializes a new GeneratorUI instance.
+//
+// Returns:
+//   - *GeneratorUI: Configured UI handler with initialized routes and session management
+//
+// Sets up message handling, loads history, initializes cleanup routines,
+// and configures HTTP routes.
 func NewGeneratorUI() *GeneratorUI {
 	ui := &GeneratorUI{
 		router:      chi.NewRouter(),
@@ -50,6 +60,10 @@ func NewGeneratorUI() *GeneratorUI {
 	return ui
 }
 
+// startCleanup initiates background goroutines for periodic maintenance tasks.
+// Runs two concurrent tasks:
+// - Session cleanup every 10 minutes
+// - History saving every 5 minutes
 func (ui *GeneratorUI) startCleanup() {
 	go func() {
 		cleanupTicker := time.NewTicker(10 * time.Minute)
@@ -68,6 +82,8 @@ func (ui *GeneratorUI) startCleanup() {
 	}()
 }
 
+// cleanupOldSessions removes sessions that have been inactive for more than 1 hour.
+// Saves history if any sessions are removed.
 func (ui *GeneratorUI) cleanupOldSessions() {
 	ui.sessionsM.Lock()
 	defer ui.sessionsM.Unlock()
@@ -91,6 +107,9 @@ func (ui *GeneratorUI) cleanupOldSessions() {
 	}
 }
 
+// loadHistory restores message history from persistent storage and cache.
+// Attempts to load from file first, then updates with any newer cache data.
+// Creates history file if it doesn't exist.
 func (ui *GeneratorUI) loadHistory() {
 	// Load from persistent storage first
 	file, err := os.OpenFile(ui.historyFile, os.O_RDONLY|os.O_CREATE, 0o644)
@@ -117,6 +136,10 @@ func (ui *GeneratorUI) loadHistory() {
 	}
 }
 
+// saveHistory persists the current message history to both cache and file storage.
+// Thread-safe operation that maintains message history in two locations:
+// - In-memory cache for quick access
+// - JSON file for persistence across restarts
 func (ui *GeneratorUI) saveHistory() {
 	ui.sessionsM.Lock()
 	defer ui.sessionsM.Unlock()
@@ -138,6 +161,13 @@ func (ui *GeneratorUI) saveHistory() {
 	}
 }
 
+// AddMessage adds a new message to a session's history and persists the update.
+//
+// Parameters:
+//   - sessionID: string identifier for the session
+//   - msg: generator.WSMessage to add to history
+//
+// Creates new history if session doesn't exist.
 func (ui *GeneratorUI) AddMessage(sessionID string, msg generator.WSMessage) {
 	ui.sessionsM.Lock()
 	history, exists := ui.msgHistory[sessionID]
@@ -153,6 +183,14 @@ func (ui *GeneratorUI) AddMessage(sessionID string, msg generator.WSMessage) {
 	ui.saveHistory()
 }
 
+// cleanupSession handles the graceful shutdown of a generation session.
+//
+// Parameters:
+//   - sessionID: string identifier for the session to cleanup
+//   - progress: *generator.GenerationProgress associated with the session
+//
+// Closes WebSocket connections, removes from active sessions,
+// caches progress, and saves history.
 func (ui *GeneratorUI) cleanupSession(sessionID string, progress *generator.GenerationProgress) {
 	progress.SetActive(false)
 	progress.Lock()
@@ -175,10 +213,22 @@ func (ui *GeneratorUI) cleanupSession(sessionID string, progress *generator.Gene
 	close(progress.Done)
 }
 
+// ServeHTTP implements the http.Handler interface for the GeneratorUI.
+//
+// Parameters:
+//   - w: http.ResponseWriter to write the response
+//   - r: *http.Request containing the request details
 func (ui *GeneratorUI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ui.router.ServeHTTP(w, r)
 }
 
+// corsMiddleware provides Cross-Origin Resource Sharing support.
+//
+// Parameters:
+//   - next: http.Handler to wrap with CORS support
+//
+// Returns:
+//   - http.Handler: Middleware that handles CORS headers and preflight requests
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -196,6 +246,12 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// setupRoutes configures all HTTP routes and middleware for the UI.
+// Sets up:
+// - Standard middleware (logging, recovery, CORS)
+// - Session management
+// - Static file serving
+// - API endpoints
 func (ui *GeneratorUI) setupRoutes() {
 	// r := chi.NewRouter()
 
@@ -223,18 +279,18 @@ func (ui *GeneratorUI) setupRoutes() {
 			next.ServeHTTP(w, r)
 		})
 	})
-	//pw, err := paywall.ConstructPaywall()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	var err error
+	ui.zoltar, err = paywall.ConstructPaywall()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	// ui.router.Post("/generate", pw.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
-	// ui.router.Post("/generate", rateLimit(ui.handleGenerate))
-	ui.router.Post("/generate", ui.handleGenerate)
+	// ui.router.Post("/generate", ui.zoltar.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
+	ui.router.Post("/generate", rateLimit(ui.handleGenerate))
+	//ui.router.Post("/generate", ui.handleGenerate)
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
-	ui.router.Get("/ws/{sessionID}", ui.handleWebSocket)
 	ui.router.Get("/check-session", ui.handleCheckSession)
 
 	fileServer := http.FileServer(http.Dir("static"))
@@ -244,18 +300,33 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Handle("/outputs/*", http.StripPrefix("/outputs/", outputServer))
 }
 
+// logRequest represents a time-ordered list of request timestamps
+// used for rate limiting.
 type logRequest []time.Time
 
-func (l *logRequest) update() error {
+// update records a new request timestamp.
+//
+// Returns:
+//   - error: any error encountered during update
+func (l logRequest) update() error {
+	l = append(l, time.Now())
 	return nil
 }
 
+// newLogRequest creates a new request log with the current timestamp.
+//
+// Returns:
+//   - logRequest: initialized with current time
 func newLogRequest() logRequest {
 	var lr []time.Time
 	lr = append(lr, time.Now())
 	return lr
 }
 
+// limit checks if the request count exceeds 3 requests in the last 4 hours.
+//
+// Returns:
+//   - bool: true if limit exceeded, false otherwise
 func (l logRequest) limit() bool {
 	count := 0
 	for i := range l {
@@ -265,10 +336,11 @@ func (l logRequest) limit() bool {
 		if lastTime.After(fourHoursAgo) {
 			count++
 		}
-		if count >= 2 {
+		if count >= 3 {
 			return true
 		}
 	}
+	l.update()
 	return false
 }
 
@@ -278,6 +350,13 @@ func init() {
 	loggedRequests = make(map[net.Addr]logRequest)
 }
 
+// rateLimit wraps an http.HandlerFunc with request rate limiting.
+//
+// Parameters:
+//   - h: http.HandlerFunc to protect with rate limiting
+//
+// Returns:
+//   - http.HandlerFunc: Handler that enforces rate limits
 func rateLimit(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		remoteIP := r.Header.Get("REMOTE_ADDR")
@@ -290,6 +369,14 @@ func rateLimit(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// exceededTheLimit checks if a given IP has exceeded the rate limit.
+//
+// Parameters:
+//   - remoteIP: string IP address to check
+//
+// Returns:
+//   - bool: true if limit exceeded
+//   - error: any error in IP resolution
 func exceededTheLimit(remoteIP string) (bool, error) {
 	ipAddr, err := net.ResolveIPAddr("ip", remoteIP)
 	if err != nil {
@@ -297,7 +384,6 @@ func exceededTheLimit(remoteIP string) (bool, error) {
 	}
 	logs, ok := loggedRequests[ipAddr]
 	if !ok {
-
 		loggedRequests[ipAddr] = newLogRequest()
 		return false, nil
 	}

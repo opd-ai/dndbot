@@ -1,3 +1,4 @@
+// Package ui provides the web user interface handlers for the DND bot generator
 package ui
 
 import (
@@ -9,7 +10,15 @@ import (
 	"github.com/opd-ai/dndbot/srv/generator"
 )
 
-// Add this helper function
+// isValidSession checks if the provided session ID is valid.
+//
+// Parameters:
+//   - sessionID: string to validate as a UUID
+//
+// Returns:
+//   - bool: true if sessionID is a valid UUID, false if empty or malformed
+//
+// The function ensures the sessionID is both non-empty and a valid UUID format.
 func isValidSession(sessionID string) bool {
 	if sessionID == "" {
 		return false
@@ -20,7 +29,15 @@ func isValidSession(sessionID string) bool {
 	return err == nil
 }
 
-// formatMessages formats a slice of WebSocket messages into HTML
+// formatMessages converts a slice of WebSocket messages into HTML representation.
+//
+// Parameters:
+//   - messages: []generator.WSMessage slice of messages to format
+//
+// Returns:
+//   - string: HTML formatted string containing all messages with proper styling
+//
+// Each message is formatted with timestamp, status, content, and output sections.
 func formatMessages(messages []generator.WSMessage) string {
 	var html strings.Builder
 	for _, msg := range messages {
@@ -44,7 +61,15 @@ func formatMessages(messages []generator.WSMessage) string {
 	return html.String()
 }
 
-// formatContent formats the message content with proper HTML escaping
+// formatContent creates an HTML paragraph from message content with XSS protection.
+//
+// Parameters:
+//   - content: string to format as HTML paragraph
+//
+// Returns:
+//   - string: HTML formatted paragraph with escaped content
+//
+// Returns empty string if content is empty. All HTML special characters are escaped
 func formatContent(content string) string {
 	if content == "" {
 		return ""
@@ -54,7 +79,16 @@ func formatContent(content string) string {
 	return fmt.Sprintf("<p class=\"message-content\">%s</p>", escaped)
 }
 
-// formatOutput formats the output content with proper HTML escaping
+// formatOutput creates an HTML pre element from output content with XSS protection.
+//
+// Parameters:
+//   - output: string to format as preformatted text
+//
+// Returns:
+//   - string: HTML formatted pre element with escaped content
+//
+// Returns empty string if output is empty. All HTML special characters are escaped
+// to prevent XSS attacks.
 func formatOutput(output string) string {
 	if output == "" {
 		return ""

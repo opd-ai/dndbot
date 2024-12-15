@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D&D Adventure Generator</title>
+    <style>
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+    </style>
+    <script type="text/javascript" src="/static/client.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <form id="generator-form">
+        <textarea id="prompt-input" 
+                  placeholder="Enter your adventure prompt..."
+                  required></textarea>
+        <button type="submit">Generate Adventure</button>
+    </form>
+    <div id="status-message"></div>
+    <div id="output-area"></div>
+</body>
+</html>

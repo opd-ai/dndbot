@@ -1,3 +1,4 @@
+// Package ui provides the web user interface handlers for the DND bot generator
 package ui
 
 import (
@@ -7,11 +8,33 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/opd-ai/dndbot/srv/components"
 	"github.com/opd-ai/dndbot/srv/generator"
 )
 
-// srv/ui/handlers.go - handleGenerate
+// handleGenerate processes adventure generation requests and manages the generation session.
+//
+// Parameters:
+//   - w: http.ResponseWriter to write the HTTP response
+//   - r: *http.Request containing the form data with the 'prompt' field
+//
+// The function:
+//   - Creates a new session with UUID
+//   - Sets up session cookies and headers
+//   - Initializes generation progress tracking
+//   - Starts asynchronous adventure generation
+//
+// Error cases:
+//   - Returns 400 if form parsing fails
+//   - Returns 400 if prompt is empty
+//   - Logs and handles generation errors via progress updates
+//
+// Related types:
+//   - generator.GenerationProgress
+//   - MessageHistory
+//
+// The generation process runs asynchronously and updates are tracked through
+// the GenerationProgress object. Client can monitor progress via WebSocket
+// connection using the provided session ID.
 func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -65,5 +88,5 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	components.GenerationStatus(sessionID).Render(r.Context(), w)
+	//components.GenerationStatus(sessionID).Render(r.Context(), w)
 }

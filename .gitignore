@@ -13,3 +13,5 @@ key.pem
 *err
 outputs
 *_files
+payments
+paywallet
