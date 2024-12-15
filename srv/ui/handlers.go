@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 //go:embed templates/index.html
@@ -21,6 +22,17 @@ var index []byte
 //   - w: http.ResponseWriter to write the HTTP response
 //   - r: *http.Request containing the incoming request details
 func (ui *GeneratorUI) handleHome(w http.ResponseWriter, r *http.Request) {
+	sessionID := uuid.New().String()
+	w.Header().Set("X-Session-Id", sessionID)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    sessionID,
+		Path:     "/",
+		MaxAge:   86400,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 	t, err := template.New("html").Parse(string(index))
 	if err != nil {
 		panic(err)
@@ -49,12 +61,13 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 		w.Write([]byte(""))
 		return
 	}
-	log.Println("Got message history", history)
-
-	messages := history.GetMessages()
-	log.Println("Message history content", messages)
+	log.Println(">>> Got message history", history)
+	log.Println(">>>>")
+	messages := formatMessages(history.GetMessages())
+	log.Println(">>> Message history content", messages)
+	log.Println(">>>>")
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(formatMessages(messages)))
+	w.Write([]byte(messages))
 }
 
 // handleCheckSession validates and checks the existence of a session.

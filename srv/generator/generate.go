@@ -97,7 +97,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 					return err
 				}
 				zipHref := fmt.Sprintf("<a href=\"%s\">Download your archived adventure</a>", zipPath)
-				zipMessage := fmt.Sprintf("💾 Adventure generatation complete!", zipHref)
+				zipMessage := fmt.Sprintf("💾 Adventure generatation complete! %s", zipHref)
 				progress.UpdateOutput(zipMessage)
 				return nil
 			},

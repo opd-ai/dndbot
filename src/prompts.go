@@ -135,6 +135,7 @@ func GetCopyrightRemovalPrompt() string {
     3. Generalize any specific setting references
     4. Maintain the adventure's theme and feeling while using original content
     5. Ensure mechanical elements are system-agnostic
+	6. Remove unacceptable tropes such as racism and sexism.
 	6. Output the complete adventure with revisions, do not provide suggestions.
 
 	Even if no revisions need to be made, output the complete original adventure.
