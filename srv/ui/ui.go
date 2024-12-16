@@ -49,7 +49,7 @@ func NewGeneratorUI() *GeneratorUI {
 	}
 
 	// Set up message emitter
-	generator.SetMessageEmitter(func(sessionID string, msg generator.WSMessage) error {
+	generator.SetMessageEmitter(func(sessionID string, msg generator.Message) error {
 		ui.AddMessage(sessionID, msg)
 		return nil
 	})
@@ -62,12 +62,12 @@ func NewGeneratorUI() *GeneratorUI {
 
 // startCleanup initiates background goroutines for periodic maintenance tasks.
 // Runs two concurrent tasks:
-// - Session cleanup every 10 minutes
-// - History saving every 5 minutes
+// - Session cleanup every 100 minutes
+// - History saving every 50 minutes
 func (ui *GeneratorUI) startCleanup() {
 	go func() {
-		cleanupTicker := time.NewTicker(10 * time.Minute)
-		saveTicker := time.NewTicker(5 * time.Minute)
+		cleanupTicker := time.NewTicker(100 * time.Minute)
+		saveTicker := time.NewTicker(50 * time.Minute)
 		defer cleanupTicker.Stop()
 		defer saveTicker.Stop()
 
@@ -165,15 +165,15 @@ func (ui *GeneratorUI) saveHistory() {
 //
 // Parameters:
 //   - sessionID: string identifier for the session
-//   - msg: generator.WSMessage to add to history
+//   - msg: generator.Message to add to history
 //
 // Creates new history if session doesn't exist.
-func (ui *GeneratorUI) AddMessage(sessionID string, msg generator.WSMessage) {
+func (ui *GeneratorUI) AddMessage(sessionID string, msg generator.Message) {
 	ui.sessionsM.Lock()
 	history, exists := ui.msgHistory[sessionID]
 	if !exists {
 		history = &MessageHistory{
-			Messages: make([]generator.WSMessage, 0),
+			Messages: make([]generator.Message, 0),
 		}
 		ui.msgHistory[sessionID] = history
 	}
@@ -193,12 +193,6 @@ func (ui *GeneratorUI) AddMessage(sessionID string, msg generator.WSMessage) {
 // caches progress, and saves history.
 func (ui *GeneratorUI) cleanupSession(sessionID string, progress *generator.GenerationProgress) {
 	progress.SetActive(false)
-	progress.Lock()
-	if progress.WSConn != nil {
-		progress.WSConn.Close()
-		progress.WSConn = nil
-	}
-	progress.Unlock()
 
 	ui.sessionsM.Lock()
 	delete(ui.sessions, sessionID)
@@ -264,18 +258,26 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Ensure session cookie exists
-			cookie, err := r.Cookie("session_id")
-			if err != nil || cookie.Value == "" {
-				sessionID := uuid.New().String()
-				http.SetCookie(w, &http.Cookie{
-					Name:     "session_id",
-					Value:    sessionID,
-					Path:     "/",
-					MaxAge:   86400, // 24 hours
-					HttpOnly: true,
-					SameSite: http.SameSiteLaxMode,
-				})
+			sessionID := r.Header.Get("X-Session-Id")
+			if sessionID == "" {
+				log.Println("no client side sessionID:", sessionID)
+				// Try cookie as fallback
+				if cookie, err := r.Cookie("session_id"); err == nil && cookie.Value != "null" {
+					log.Println("cookie found", cookie.Value, err)
+					sessionID = cookie.Value
+				} else {
+					sessionID = uuid.New().String()
+					http.SetCookie(w, &http.Cookie{
+						Name:     "session_id",
+						Value:    sessionID,
+						Path:     "/",
+						MaxAge:   864000,
+						HttpOnly: false,
+						SameSite: http.SameSiteLaxMode,
+					})
+				}
 			}
+			w.Header().Set("X-Session-Id", sessionID)
 			next.ServeHTTP(w, r)
 		})
 	})
@@ -287,9 +289,7 @@ func (ui *GeneratorUI) setupRoutes() {
 
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	// ui.router.Post("/generate", ui.zoltar.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
-	ui.router.Post("/generate", rateLimit(ui.handleGenerate))
-	//ui.router.Post("/generate", ui.handleGenerate)
+	ui.router.Post("/generate", ui.zoltar.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/check-session", ui.handleCheckSession)
 

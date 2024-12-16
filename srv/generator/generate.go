@@ -35,7 +35,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 				log.Println("Generating table of Contents")
 				progress.UpdateOutput("🎲 Generating table of contents...")
 				var err error
-				adventure, err = dndbot.GenerateTableOfContents(client, prompt)
+				adventure, err = dndbot.GenerateTableOfContents(client, prompt, progress)
 				return err
 			},
 		},
@@ -60,7 +60,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 			function: func() error {
 				log.Println("Expanding adventure content")
 				progress.UpdateOutput("📚 Expanding adventure content...")
-				return dndbot.ExpandAdventures(client, &adventure)
+				return dndbot.ExpandAdventures(client, &adventure, progress)
 			},
 		},
 		{

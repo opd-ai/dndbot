@@ -3,7 +3,6 @@ package ui
 
 import (
 	"fmt"
-	"html"
 	"strings"
 
 	"github.com/google/uuid"
@@ -38,7 +37,7 @@ func isValidSession(sessionID string) bool {
 //   - string: HTML formatted string containing all messages with proper styling
 //
 // Each message is formatted with timestamp, status, content, and output sections.
-func formatMessages(messages []generator.WSMessage) string {
+func formatMessages(messages []generator.Message) string {
 	var html strings.Builder
 	for _, msg := range messages {
 		html.WriteString(fmt.Sprintf(`
@@ -75,7 +74,7 @@ func formatContent(content string) string {
 		return ""
 	}
 	// Escape HTML special characters to prevent XSS
-	escaped := html.EscapeString(content)
+	escaped := content // html.EscapeString(content)
 	return fmt.Sprintf("<p class=\"message-content\">%s</p>", escaped)
 }
 
@@ -94,6 +93,6 @@ func formatOutput(output string) string {
 		return ""
 	}
 	// Escape HTML special characters to prevent XSS
-	escaped := html.EscapeString(output)
+	escaped := output // html.EscapeString(output)
 	return fmt.Sprintf("<pre class=\"message-output\">%s</pre>", escaped)
 }

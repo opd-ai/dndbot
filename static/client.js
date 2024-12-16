@@ -86,7 +86,9 @@ class DndApiClient {
     }
 
     getStoredSessionId() {
-        this.logger.debug('Retrieving stored session ID');
+        this.logger.debug('Examining stored session ID: ' + document.cookie + '/');
+        this.logger.debug('Examining cookies: ' + document.cookie + '/');
+        this.logger.debug('Retrieving stored session ID: '+ document.cookie + '/');
         const sessionId = document.cookie.split('; ')
             .find(row => row.startsWith('session_id='))
             ?.split('=')[1] || null;
@@ -156,6 +158,12 @@ class DndGeneratorUI {
         this.apiClient = apiClient;
         this.logger = new Logger('DndGeneratorUI');
         this.logger.info('UI Manager initialized');
+        this.pollingState = {
+            interval: null,
+            isPaused: false,
+            emptyResponseCount: 0,
+            maxEmptyResponses: 3 // Number of empty responses before pausing
+        };
         this.initializeUI();
     }
 
@@ -177,8 +185,13 @@ class DndGeneratorUI {
 
         this.elements.form.addEventListener('submit', (e) => this.handleSubmit(e));
         this.logger.info('UI initialization complete');
+        this.startPolling();
     }
 
+    /**
+     * Handles form submission with polling management
+     * @param {Event} event Form submit event
+     */
     async handleSubmit(event) {
         event.preventDefault();
         const prompt = this.elements.prompt.value.trim();
@@ -192,10 +205,18 @@ class DndGeneratorUI {
 
         try {
             this.setLoading(true);
+            // Stop any existing polling
+            this.stopPolling();
+            
             this.logger.debug('Starting adventure generation');
             const result = await this.apiClient.generateAdventure(prompt);
             this.updateOutput(result);
+            
+            // Reset polling state and start fresh
+            this.pollingState.emptyResponseCount = 0;
+            this.pollingState.isPaused = false;
             this.startPolling();
+            
             this.logger.info('Adventure generation completed');
         } catch (error) {
             this.logger.error('Form submission failed', error);
@@ -222,25 +243,115 @@ class DndGeneratorUI {
         this.elements.prompt.disabled = isLoading;
     }
 
+    /**
+     * Manages message polling with intelligent pause/resume
+     * @returns {void}
+     */
     async startPolling() {
         this.logger.info('Starting message polling');
         let pollCount = 0;
-        const pollInterval = setInterval(async () => {
+        
+        // Clear any existing polling interval
+        if (this.pollingState.interval) {
+            clearInterval(this.pollingState.interval);
+        }
+
+        const poll = async () => {
             try {
                 pollCount++;
-                this.logger.debug('Polling for updates', { pollCount });
+                this.logger.debug('Polling for updates', { 
+                    pollCount,
+                    isPaused: this.pollingState.isPaused,
+                    emptyResponseCount: this.pollingState.emptyResponseCount
+                });
+
                 const history = await this.apiClient.getMessageHistory();
-                this.updateOutput(history);
+                
+                // Check response content
+                if (!history || history.length === 0) {
+                    this.pollingState.emptyResponseCount++;
+                    this.logger.debug('Empty response received', {
+                        emptyResponseCount: this.pollingState.emptyResponseCount
+                    });
+
+                    // Pause polling if we've received too many empty responses
+                    if (this.pollingState.emptyResponseCount >= this.pollingState.maxEmptyResponses) {
+                        this.pausePolling();
+                    }
+                } else {
+                    // Reset empty response counter and ensure polling is active
+                    this.pollingState.emptyResponseCount = 0;
+                    if (this.pollingState.isPaused) {
+                        this.resumePolling();
+                    }
+                    this.updateOutput(history);
+                }
+
             } catch (error) {
                 this.logger.error('Polling failed', error, { pollCount });
-                clearInterval(pollInterval);
+                this.stopPolling();
             }
-        }, 2000);
+        };
 
+        // Initial poll
+        await poll();
+
+        // Set up polling interval
+        this.pollingState.interval = setInterval(poll, 2000);
+
+        // Set up polling timeout
         setTimeout(() => {
-            clearInterval(pollInterval);
+            this.stopPolling();
             this.logger.info('Polling stopped after timeout', { totalPolls: pollCount });
-        }, 300000);
+        }, 300000); // 5 minutes
+    }
+
+    /**
+     * Pauses the polling loop
+     */
+    pausePolling() {
+        if (!this.pollingState.isPaused) {
+            this.logger.info('Pausing polling due to empty responses');
+            this.pollingState.isPaused = true;
+            clearInterval(this.pollingState.interval);
+            this.pollingState.interval = null;
+            
+            // Update UI to show paused state
+            this.elements.status.className = 'status-paused';
+        }
+    }
+
+    /**
+     * Resumes the polling loop
+     */
+    resumePolling() {
+        if (this.pollingState.isPaused) {
+            this.logger.info('Resuming polling');
+            this.pollingState.isPaused = false;
+            this.pollingState.emptyResponseCount = 0;
+            this.startPolling(); // Restart polling loop
+            
+            // Update UI to show active state
+            this.elements.status.textContent = 'Generating content...';
+            this.elements.status.className = 'status-active';
+        }
+    }
+
+    /**
+     * Completely stops the polling loop
+     */
+    stopPolling() {
+        this.logger.info('Stopping polling completely');
+        if (this.pollingState.interval) {
+            clearInterval(this.pollingState.interval);
+            this.pollingState.interval = null;
+        }
+        this.pollingState.isPaused = false;
+        this.pollingState.emptyResponseCount = 0;
+        
+        // Update UI to show completed state
+        this.elements.status.textContent = 'Generation complete';
+        this.elements.status.className = 'status-complete';
     }
 }
 

@@ -23,24 +23,33 @@ func NewClaudeClient(apiKey string) *ClaudeClient {
 
 func (c *ClaudeClient) SendMessage(systemPrompt, userPrompt string) (string, error) {
 	ctx := context.Background()
-
-	message, err := c.client.Messages.New(
-		ctx,
-		anthropic.MessageNewParams{
-			Model:     anthropic.F(anthropic.ModelClaude3_5SonnetLatest),
-			MaxTokens: anthropic.F(int64(4096)),
-			System: anthropic.F([]anthropic.TextBlockParam{
-				anthropic.NewTextBlock(systemPrompt),
-			}),
-			Messages: anthropic.F([]anthropic.MessageParam{
-				anthropic.NewUserMessage(
-					anthropic.NewTextBlock(userPrompt),
-				),
-			}),
-		},
-	)
-	if err != nil {
-		return "", fmt.Errorf("claude api error: %w", err)
+	tries := 0
+	var message *anthropic.Message
+	for {
+		var err error
+		message, err = c.client.Messages.New(
+			ctx,
+			anthropic.MessageNewParams{
+				Model:     anthropic.F(anthropic.ModelClaude3_5SonnetLatest),
+				MaxTokens: anthropic.F(int64(4096)),
+				System: anthropic.F([]anthropic.TextBlockParam{
+					anthropic.NewTextBlock(systemPrompt),
+				}),
+				Messages: anthropic.F([]anthropic.MessageParam{
+					anthropic.NewUserMessage(
+						anthropic.NewTextBlock(userPrompt),
+					),
+				}),
+			},
+		)
+		if tries > 4 {
+			if err != nil {
+				return "", fmt.Errorf("claude api error: %w", err)
+			}
+		}
+		if err == nil {
+			break
+		}
 	}
 
 	if len(message.Content) == 0 {

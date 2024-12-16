@@ -10,7 +10,7 @@ import (
 // MessageHistory maintains a thread-safe list of WebSocket messages for a generation session.
 // It provides concurrent-safe operations for adding and retrieving messages.
 type MessageHistory struct {
-	Messages []generator.WSMessage
+	Messages []generator.Message
 	mu       sync.RWMutex
 }
 
@@ -21,7 +21,7 @@ type MessageHistory struct {
 //
 // The method uses mutex locking to ensure thread-safe append operations
 // when multiple goroutines are modifying the message history.
-func (h *MessageHistory) AddMessage(msg generator.WSMessage) {
+func (h *MessageHistory) AddMessage(msg generator.Message) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.Messages = append(h.Messages, msg)
@@ -35,10 +35,10 @@ func (h *MessageHistory) AddMessage(msg generator.WSMessage) {
 // The method creates a deep copy of the messages slice to prevent
 // external modifications to the internal state. Uses read lock for
 // concurrent access optimization.
-func (h *MessageHistory) GetMessages() []generator.WSMessage {
+func (h *MessageHistory) GetMessages() []generator.Message {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	messages := make([]generator.WSMessage, len(h.Messages))
+	messages := make([]generator.Message, len(h.Messages))
 	copy(messages, h.Messages)
 	return messages
 }

@@ -22,17 +22,27 @@ var index []byte
 //   - w: http.ResponseWriter to write the HTTP response
 //   - r: *http.Request containing the incoming request details
 func (ui *GeneratorUI) handleHome(w http.ResponseWriter, r *http.Request) {
-	sessionID := uuid.New().String()
+	sessionID := r.Header.Get("X-Session-Id")
+	if sessionID == "" {
+		log.Println("no client side sessionID:", sessionID)
+		// Try cookie as fallback
+		if cookie, err := r.Cookie("session_id"); err == nil && cookie.Value != "null" {
+			log.Println("cookie found", cookie.Value, err)
+			sessionID = cookie.Value
+		} else {
+			sessionID = uuid.New().String()
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    sessionID,
+				Path:     "/",
+				MaxAge:   864000,
+				HttpOnly: false,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+	}
 	w.Header().Set("X-Session-Id", sessionID)
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		MaxAge:   86400,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
 	t, err := template.New("html").Parse(string(index))
 	if err != nil {
 		panic(err)
@@ -61,11 +71,7 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 		w.Write([]byte(""))
 		return
 	}
-	log.Println(">>> Got message history", history)
-	log.Println(">>>>")
 	messages := formatMessages(history.GetMessages())
-	log.Println(">>> Message history content", messages)
-	log.Println(">>>>")
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(messages))
 }
@@ -91,7 +97,7 @@ func (ui *GeneratorUI) handleCheckSession(w http.ResponseWriter, r *http.Request
 	}
 
 	if !isValidSession(sessionID) {
-		//components.GenerationStatus("").Render(r.Context(), w)
+		w.Write([]byte(""))
 		return
 	}
 
@@ -102,12 +108,14 @@ func (ui *GeneratorUI) handleCheckSession(w http.ResponseWriter, r *http.Request
 
 	if !exists {
 		if _, found := ui.cache.Get(sessionID); !found {
-			//components.GenerationStatus("").Render(r.Context(), w)
+			// components.GenerationStatus("").Render(r.Context(), w)
+			w.Write([]byte(""))
 			return
 		}
 	}
 
-	//components.GenerationStatus(sessionID).Render(r.Context(), w)
+	// components.GenerationStatus(sessionID).Render(r.Context(), w)
+	w.Write([]byte(""))
 }
 
 // handleFavicon serves the favicon.ico file from the static directory.

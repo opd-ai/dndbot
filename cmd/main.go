@@ -45,7 +45,7 @@ func main() {
 		}
 	}
 	// Process the adventure
-	adventure, err := dndbot.GenerateTableOfContents(client, prompt)
+	adventure, err := dndbot.GenerateTableOfContents(client, prompt, nil)
 	if err != nil {
 		fmt.Printf("Error generating table of contents: %v\n", err)
 		os.Exit(1)
@@ -61,7 +61,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := dndbot.ExpandAdventures(client, &adventure); err != nil {
+	if err := dndbot.ExpandAdventures(client, &adventure, nil); err != nil {
 		fmt.Printf("Error expanding adventures: %v\n", err)
 		os.Exit(1)
 	}

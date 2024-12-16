@@ -4,8 +4,6 @@ import (
 	"log"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 type GenerationState string
@@ -19,12 +17,11 @@ const (
 )
 
 type GenerationProgress struct {
-	mu        sync.RWMutex
+	RWMutex   sync.RWMutex
 	SessionID string
 	State     GenerationState
 	Output    string
 	Error     error
-	WSConn    *websocket.Conn
 	Done      chan bool
 	StartTime time.Time
 	IsActive  bool
@@ -34,12 +31,6 @@ type GenerationProgress struct {
 func (gp *GenerationProgress) Close() {
 	gp.Lock()
 	defer gp.Unlock()
-	if gp.WSConn != nil {
-		gp.WSConn.WriteMessage(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		gp.WSConn.Close()
-		gp.WSConn = nil
-	}
 }
 
 // srv/generator/types.go
@@ -47,7 +38,7 @@ func (p *GenerationProgress) SendUpdate(message string) error {
 	p.Lock()
 	defer p.Unlock()
 
-	msg := WSMessage{
+	msg := Message{
 		Type:      "update",
 		Status:    string(p.State),
 		Message:   message,
@@ -60,17 +51,6 @@ func (p *GenerationProgress) SendUpdate(message string) error {
 		if err := messageEmitter(p.SessionID, msg); err != nil {
 			log.Printf("[Session %s] Failed to emit message to history: %v", p.SessionID, err)
 		}
-	}
-
-	// Try to send via WebSocket if available
-	if p.WSConn != nil {
-		if err := p.WSConn.WriteJSON(msg); err != nil {
-			log.Printf("[Session %s] Failed to send WebSocket message: %v", p.SessionID, err)
-			return err
-		}
-		log.Printf("[Session %s] Message sent via WebSocket: %s", p.SessionID, message)
-	} else {
-		log.Printf("[Session %s] Message queued (no WebSocket): %s", p.SessionID, message)
 	}
 
 	return nil
@@ -116,32 +96,32 @@ func (p *GenerationProgress) SetActive(active bool) {
 }
 
 func (gp *GenerationProgress) Lock() {
-	gp.mu.Lock()
+	gp.RWMutex.Lock()
 }
 
 func (gp *GenerationProgress) Unlock() {
-	gp.mu.Unlock()
+	gp.RWMutex.Unlock()
 }
 
 func (gp *GenerationProgress) GetState() GenerationState {
-	gp.mu.Lock()
-	defer gp.mu.Unlock()
+	gp.Lock()
+	defer gp.Unlock()
 	return gp.State
 }
 
 func (gp *GenerationProgress) IsStillActive() bool {
-	gp.mu.RLock()
-	defer gp.mu.RUnlock()
+	gp.RWMutex.RLock()
+	defer gp.RWMutex.RUnlock()
 	return gp.IsActive
 }
 
 func (gp *GenerationProgress) IsDone() bool {
-	gp.mu.Lock()
-	defer gp.mu.Unlock()
+	gp.Lock()
+	defer gp.Unlock()
 	return (StateCompleted == gp.GetState())
 }
 
-type WSMessage struct {
+type Message struct {
 	Type      string    `json:"type"`
 	Status    string    `json:"status"`
 	Message   string    `json:"message"`
@@ -150,8 +130,8 @@ type WSMessage struct {
 }
 
 // srv/generator/types.go
-func NewWSMessage(msgType, status, message, output string) WSMessage {
-	return WSMessage{
+func NewMessage(msgType, status, message, output string) Message {
+	return Message{
 		Type:      msgType,
 		Status:    status,
 		Message:   message,
@@ -162,16 +142,16 @@ func NewWSMessage(msgType, status, message, output string) WSMessage {
 
 // srv/generator/types.go
 var (
-	messageEmitter func(sessionID string, msg WSMessage) error
+	messageEmitter func(sessionID string, msg Message) error
 )
 
-func wsEmitMessage(sessionID string, msg WSMessage) error {
+func emitMessage(sessionID string, msg Message) error {
 	if messageEmitter != nil {
 		return messageEmitter(sessionID, msg)
 	}
 	return nil
 }
 
-func SetMessageEmitter(emitter func(sessionID string, msg WSMessage) error) {
+func SetMessageEmitter(emitter func(sessionID string, msg Message) error) {
 	messageEmitter = emitter
 }

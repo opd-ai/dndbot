@@ -6,7 +6,13 @@ import (
 	"strings"
 )
 
-func GenerateTableOfContents(client *ClaudeClient, prompt string) (Adventure, error) {
+func GenerateTableOfContents(client *ClaudeClient, prompt string, p progressor) (Adventure, error) {
+	var pr progressor
+	if p != nil {
+		pr = p
+	} else {
+		pr = &nullProgressor{}
+	}
 	systemPrompt := `Create a Role-Playing Game adventure series table of contents based on the following prompt.
     For each episode include:
     - Title
@@ -46,6 +52,7 @@ Characters: Character One, Character Two, Characther Three... (All one line)
 		return Adventure{}, fmt.Errorf("generating ToC: %w", err)
 	}
 	log.Println(response)
+	pr.UpdateOutput(response)
 
 	// Parse the response into Adventure struct
 	adventure := Adventure{
@@ -83,7 +90,23 @@ func GenerateOnePageDungeons(client *ClaudeClient, adventure *Adventure) error {
 	return nil
 }
 
-func ExpandAdventures(client *ClaudeClient, adventure *Adventure) error {
+type progressor interface {
+	UpdateOutput(message string)
+}
+
+type nullProgressor struct{}
+
+func (n nullProgressor) UpdateOutput(message string) {
+	return
+}
+
+func ExpandAdventures(client *ClaudeClient, adventure *Adventure, p progressor) error {
+	var pr progressor
+	if p != nil {
+		pr = p
+	} else {
+		pr = &nullProgressor{}
+	}
 	for i := range adventure.Episodes {
 		// Build initial prompt
 		prompt := fmt.Sprintf("Expand this one-page dungeon into a detailed 8 page(about 600 lines) adventure:\n%s\n",
@@ -92,12 +115,18 @@ func ExpandAdventures(client *ClaudeClient, adventure *Adventure) error {
 			prompt += fmt.Sprintf("There was a previous adventure in this series. Here is summary of the previous adventure:\n%s\n",
 				adventure.Episodes[i-1].Text())
 		}
+		msgUpd := fmt.Sprintf("Working on: %s ", adventure.Episodes[i].Title)
+		pr.UpdateOutput(msgUpd)
 
 		// Start with empty adventure text
 		adventure.Episodes[i].FullAdventure = ""
 
 		currentPrompt := prompt
+		index := 0
 		for {
+			msgUpd := fmt.Sprintf("Working on: %s section %d", adventure.Episodes[i].Title, index)
+			pr.UpdateOutput(msgUpd)
+			index++
 			response, err := client.SendMessage(GetExpandedAdventurePrompt()+getWritingStyleDetails(), currentPrompt)
 			if err != nil {
 				return fmt.Errorf("expanding episode %d: %w", i, err)

@@ -48,17 +48,26 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create new session
-	sessionID := uuid.New().String()
+	sessionID := r.Header.Get("X-Session-Id")
+	if sessionID == "" {
+		log.Println("no client side sessionID:", sessionID)
+		// Try cookie as fallback
+		if cookie, err := r.Cookie("session_id"); err == nil && cookie.Value != "null" {
+			log.Println("cookie found", cookie.Value, err)
+			sessionID = cookie.Value
+		} else {
+			sessionID = uuid.New().String()
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    sessionID,
+				Path:     "/",
+				MaxAge:   864000,
+				HttpOnly: false,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+	}
 	w.Header().Set("X-Session-Id", sessionID)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    sessionID,
-		Path:     "/",
-		MaxAge:   86400,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
 
 	// Create progress object
 	progress := &generator.GenerationProgress{
@@ -73,7 +82,7 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	ui.sessions[sessionID] = progress
 	if _, exists := ui.msgHistory[sessionID]; !exists {
 		ui.msgHistory[sessionID] = &MessageHistory{
-			Messages: make([]generator.WSMessage, 0),
+			Messages: make([]generator.Message, 0),
 		}
 	}
 	ui.sessionsM.Unlock()
@@ -88,5 +97,5 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	//components.GenerationStatus(sessionID).Render(r.Context(), w)
+	// components.GenerationStatus(sessionID).Render(r.Context(), w)
 }
