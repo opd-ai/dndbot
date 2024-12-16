@@ -215,6 +215,8 @@ class DndGeneratorUI {
             // Reset polling state and start fresh
             this.pollingState.emptyResponseCount = 0;
             this.pollingState.isPaused = false;
+
+            
             this.startPolling();
             
             this.logger.info('Adventure generation completed');
@@ -224,6 +226,10 @@ class DndGeneratorUI {
         } finally {
             this.setLoading(false);
         }
+    }
+
+    handleError(error){
+        this.logger.error("Error caught:", error)
     }
 
     updateOutput(content) {
@@ -255,6 +261,9 @@ class DndGeneratorUI {
         if (this.pollingState.interval) {
             clearInterval(this.pollingState.interval);
         }
+        //TODO: figure out how to make these exectable
+        nodeScriptReplace(document.getElementById("qr"));
+        nodeScriptReplace(document.getElementById("btcqr"));
 
         const poll = async () => {
             try {
@@ -317,6 +326,7 @@ class DndGeneratorUI {
             this.pollingState.interval = null;
             
             // Update UI to show paused state
+            this.elements.status.textContent = 'Generation paused...';
             this.elements.status.className = 'status-paused';
         }
     }
@@ -368,3 +378,34 @@ document.addEventListener('DOMContentLoaded', () => {
         logger.error('Failed to initialize application', error);
     }
 });
+
+function nodeScriptReplace(node) {
+    if (node === null) {
+        return
+    }
+    if ( nodeScriptIs(node) === true ) {
+            node.parentNode.replaceChild( nodeScriptClone(node) , node );
+    }
+    else {
+            var i = -1, children = node.childNodes;
+            while ( ++i < children.length ) {
+                  nodeScriptReplace( children[i] );
+            }
+    }
+
+    return node;
+}
+function nodeScriptClone(node){
+    var script  = document.createElement("script");
+    script.text = node.innerHTML;
+
+    var i = -1, attrs = node.attributes, attr;
+    while ( ++i < attrs.length ) {                                    
+          script.setAttribute( (attr = attrs[i]).name, attr.value );
+    }
+    return script;
+}
+
+function nodeScriptIs(node) {
+    return node.tagName === 'SCRIPT';
+}
