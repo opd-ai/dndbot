@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +12,7 @@ import (
 var (
 	directory = flag.String("dirname", "01-Adventure", "Name of the output directory for the adventure")
 	setting   = flag.String("setting", "SETTING.md", "a file containing the details of the campaign setting")
+	balance   = flag.Bool("balance", false, "display the account balance and stop")
 )
 
 // main.go
@@ -43,6 +45,14 @@ func main() {
 			fmt.Println("Please provide a narrative prompt")
 			os.Exit(1)
 		}
+	}
+	if *balance {
+		bal, err := client.GetAccountBalance(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(bal)
+		os.Exit(0)
 	}
 	// Process the adventure
 	adventure, err := dndbot.GenerateTableOfContents(client, prompt, nil)

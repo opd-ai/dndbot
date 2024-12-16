@@ -3,13 +3,16 @@ package dndbot
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
 type ClaudeClient struct {
-	client *anthropic.Client
+	client     *anthropic.Client
+	httpClient http.Client
+	apiKey     string
 }
 
 func NewClaudeClient(apiKey string) *ClaudeClient {
@@ -18,6 +21,7 @@ func NewClaudeClient(apiKey string) *ClaudeClient {
 	)
 	return &ClaudeClient{
 		client: client,
+		apiKey: apiKey,
 	}
 }
 
