@@ -15,3 +15,5 @@ outputs
 *_files
 payments
 paywallet
+profile
+*.json
