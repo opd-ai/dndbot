@@ -51,7 +51,7 @@ func main() {
 	}
 
 	// Start the server
-	log.Println("Server starting on :3000")
+	log.Println("Server starting on", listener.Addr())
 	if err := http.Serve(listener, generator); err != nil {
 		log.Fatal(err)
 	}
