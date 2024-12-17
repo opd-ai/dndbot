@@ -300,6 +300,7 @@ class DndGeneratorUI {
                 this.logger.error('Polling failed', error, { pollCount });
                 this.stopPolling();
             }
+            window.scrollTo(0, document.body.scrollHeight);
         };
 
         // Initial poll
