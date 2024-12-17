@@ -5,6 +5,7 @@ build:
 	go build -o dndbotwww ./srv
 
 run: build
+	killall dndbotwww
 	./dndbotwww
 
 clean:
