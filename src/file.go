@@ -18,7 +18,7 @@ func SaveToFiles(adventure *Adventure, outputDir string) error {
 		return fmt.Errorf("saving episode: %w", err)
 	}
 	for i, cover := range adventure.Covers {
-		illusPath := filepath.Join(contentPath, fmt.Sprintf("Caption_%02d.md", i+1))
+		illusPath := filepath.Join(contentPath, fmt.Sprintf("z_Caption_%02d.md", i+1))
 		content := fmt.Sprintf("Description: %s\nStyle: %s\nIs Map: %v",
 			cover.Description, cover.Style, cover.IsMap)
 		if err := ioutil.WriteFile(illusPath, []byte(content), 0o644); err != nil {

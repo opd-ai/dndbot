@@ -264,7 +264,7 @@ func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure
 			caption := fmt.Sprintf("%s:%s:%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
 			fields := fmt.Sprintf("\n  * Category: %s\n  * Description: %s\n  * Style: %s\n", amap(illustration.IsMap), illustration.Description, illustration.Style)
 			captionFile := fmt.Sprintf(" - [%s](%s) `%s`\n", caption, pngPath, fields)
-			indexString2 := fmt.Sprintf("%02d", index2+2)
+			indexString2 := fmt.Sprintf("%02d", index2)
 			if err := os.WriteFile(filepath.Join(dir, indexString2+"_Illustration.md"), []byte(captionFile), 0o644); err != nil {
 				return err
 			}
