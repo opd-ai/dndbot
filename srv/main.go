@@ -15,6 +15,8 @@ import (
 var (
 	paywall = flag.Bool("paywall", false, "paywall output")
 	tls     = flag.Bool("tls", false, "auto-generate TLS certificate")
+	mail    = flag.String("mail", "example@example.com", "")
+	domain  = flag.String("domain", "example.com", "")
 )
 
 func main() {
@@ -28,10 +30,10 @@ func main() {
 	generator := ui.NewGeneratorUI(*paywall)
 
 	cfg := wileedot.Config{
-		Domain:         "localhost",
-		AllowedDomains: []string{"localhost"},
+		Domain:         *domain,
+		AllowedDomains: []string{*domain},
 		CertDir:        "./",
-		Email:          "example@example.com",
+		Email:          *mail,
 	}
 
 	var listener net.Listener
