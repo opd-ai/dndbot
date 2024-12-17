@@ -238,7 +238,6 @@ func amap(s bool) string {
 }
 
 func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
-	illustrations := "# Illustrations\n\n"
 	for index, episode := range adventure.Episodes {
 		indexString := fmt.Sprintf("%02d", index+1)
 		dir := filepath.Join(path, indexString+"_Episode")
@@ -265,17 +264,12 @@ func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure
 			caption := fmt.Sprintf("%s:%s:%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
 			fields := fmt.Sprintf("\n  * Category: %s\n  * Description: %s\n  * Style: %s\n", amap(illustration.IsMap), illustration.Description, illustration.Style)
 			captionFile := fmt.Sprintf(" - [%s](%s) `%s`\n", caption, pngPath, fields)
-			illustrations += captionFile
 			indexString2 := fmt.Sprintf("%02d", index2+2)
 			if err := os.WriteFile(filepath.Join(dir, indexString2+"_Illustration.md"), []byte(captionFile), 0o644); err != nil {
 				return err
 			}
 		}
-		if err := os.WriteFile(filepath.Join(dir, "00_Illustrations.md"), []byte(illustrations), 0o644); err != nil {
-			return err
-		}
 	}
-
 	return nil
 }
 
