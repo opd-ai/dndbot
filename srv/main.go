@@ -16,7 +16,7 @@ var (
 	paywall = flag.Bool("paywall", false, "paywall output")
 	tls     = flag.Bool("tls", false, "auto-generate TLS certificate")
 	mail    = flag.String("mail", "example@example.com", "")
-	domain  = flag.String("domain", "example.com", "")
+	domain  = flag.String("domain", "localhost", "")
 )
 
 func main() {
@@ -46,7 +46,7 @@ func main() {
 		}
 	} else {
 		var err error
-		listener, err = net.Listen("tcp", "localhost:")
+		listener, err = net.Listen("tcp", *domain+":")
 		if err != nil {
 			log.Fatal(err)
 		}
