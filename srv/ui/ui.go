@@ -256,7 +256,11 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Use(middleware.Logger)
 	ui.router.Use(middleware.Recoverer)
 	ui.router.Use(corsMiddleware)
-	ui.router.Use(httprate.LimitByIP(120, time.Minute))
+	ui.router.Use(httprate.Limit(
+		40,          // requests
+		time.Minute, // per duration
+		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
+	))
 
 	// Session management middleware
 	ui.router.Use(func(next http.Handler) http.Handler {
