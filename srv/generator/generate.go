@@ -11,11 +11,13 @@ import (
 	"time"
 
 	dndbot "github.com/opd-ai/dndbot/src"
+	"github.com/opd-ai/horde"
 	// util "github.com/opd-ai/dndbot/srv/util"
 )
 
 func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 	client := dndbot.NewClaudeClient(os.Getenv("CLAUDE_API_KEY"))
+	hordeClient := horde.NewClient(os.Getenv("HORDE_API_KEY"))
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
@@ -48,11 +50,35 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 			},
 		},
 		{
+			name: "Incremental saving files",
+			function: func() error {
+				log.Println("Incremental save adventure files")
+				progress.UpdateOutput("💾 Incrementally Saving adventure files...")
+				return dndbot.SaveToFiles(&adventure, filepath.Join("outputs", progress.SessionID))
+			},
+		},
+		{
+			name: "",
+			function: func() error {
+				log.Println("Generating actual covers")
+				progress.UpdateOutput("Generating actual covers...")
+				return dndbot.GenerateCoversFromPrompts(hordeClient, &adventure, filepath.Join("outputs", progress.SessionID, "00_Contents"))
+			},
+		},
+		{
 			name: "Designing dungeons",
 			function: func() error {
 				log.Println("Designing dungeon layouts")
 				progress.UpdateOutput("🗺️ Designing dungeon layouts...")
 				return dndbot.GenerateOnePageDungeons(client, &adventure)
+			},
+		},
+		{
+			name: "Incremental saving files",
+			function: func() error {
+				log.Println("Incremental save adventure files")
+				progress.UpdateOutput("💾 Incrementally Saving adventure files...")
+				return dndbot.SaveToFiles(&adventure, filepath.Join("outputs", progress.SessionID))
 			},
 		},
 		{
@@ -64,11 +90,27 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 			},
 		},
 		{
+			name: "Incremental saving files",
+			function: func() error {
+				log.Println("Incremental save adventure files")
+				progress.UpdateOutput("💾 Incrementally Saving adventure files...")
+				return dndbot.SaveToFiles(&adventure, filepath.Join("outputs", progress.SessionID))
+			},
+		},
+		{
 			name: "Creating illustrations",
 			function: func() error {
 				log.Println("Creating illustration prompts")
 				progress.UpdateOutput("🖼️ Creating illustration prompts...")
 				return dndbot.GenerateIllustrationPrompts(client, &adventure)
+			},
+		},
+		{
+			name: "",
+			function: func() error {
+				log.Println("Generating actual illustrations")
+				progress.UpdateOutput("Generating actual illustrations...")
+				return dndbot.GenerateIllustrationsFromPrompts(hordeClient, &adventure, filepath.Join("outputs", progress.SessionID))
 			},
 		},
 		{
@@ -96,7 +138,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 				if err != nil {
 					return err
 				}
-				zipHref := fmt.Sprintf("<a href=\"%s\">Download your archived adventure</a>", zipPath)
+				zipHref := fmt.Sprintf("<font size=\"5\">  <a href=\"%s\">Download your archived adventure</a>  </font>", zipPath)
 				zipMessage := fmt.Sprintf("💾 Adventure generatation complete! %s", zipHref)
 				progress.UpdateOutput(zipMessage)
 				return nil

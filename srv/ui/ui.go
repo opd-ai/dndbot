@@ -30,6 +30,7 @@ type GeneratorUI struct {
 	cache       *cache.Cache
 	historyFile string
 	zoltar      *paywall.Paywall
+	usePaywall  bool
 }
 
 // NewGeneratorUI creates and initializes a new GeneratorUI instance.
@@ -39,13 +40,14 @@ type GeneratorUI struct {
 //
 // Sets up message handling, loads history, initializes cleanup routines,
 // and configures HTTP routes.
-func NewGeneratorUI() *GeneratorUI {
+func NewGeneratorUI(usePaywall bool) *GeneratorUI {
 	ui := &GeneratorUI{
 		router:      chi.NewRouter(),
 		sessions:    make(map[string]*generator.GenerationProgress),
 		msgHistory:  make(map[string]*MessageHistory),
 		cache:       cache.New(24*time.Hour, 1*time.Hour),
 		historyFile: "session_history.json",
+		usePaywall:  usePaywall,
 	}
 
 	// Set up message emitter
@@ -289,7 +291,11 @@ func (ui *GeneratorUI) setupRoutes() {
 
 	// Routes
 	ui.router.Get("/", ui.handleHome)
-	ui.router.Post("/generate", ui.zoltar.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
+	if ui.usePaywall {
+		ui.router.Post("/generate", ui.zoltar.MiddlewareFuncFunc(rateLimit(ui.handleGenerate)))
+	} else {
+		ui.router.Post("/generate", rateLimit(ui.handleGenerate))
+	}
 	ui.router.Get("/api/messages/{sessionID}", ui.handleGetMessages)
 	ui.router.Get("/check-session", ui.handleCheckSession)
 

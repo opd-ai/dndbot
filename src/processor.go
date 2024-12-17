@@ -3,7 +3,11 @@ package dndbot
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/opd-ai/horde"
 )
 
 func GenerateTableOfContents(client *ClaudeClient, prompt string, p progressor) (Adventure, error) {
@@ -224,4 +228,94 @@ func RemoveCopyrightedMaterial(client *ClaudeClient, adventure *Adventure) error
 	}
 
 	return nil
+}
+
+func amap(s bool) string {
+	if s {
+		return "Area map"
+	}
+	return "Illustration"
+}
+
+func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
+	illustrations := "# Illustrations\n\n"
+	for index, episode := range adventure.Episodes {
+		indexString := fmt.Sprintf("%02d", index+1)
+		dir := filepath.Join(path, indexString+"_Episode")
+		for index2, illustration := range episode.Illustrations {
+			prompt := fmt.Sprintf("%s\n%s\n%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
+			data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL")
+			if err != nil {
+				return err
+			}
+			os.MkdirAll(dir, 0o755)
+			outPath := filepath.Join(dir, filenamer(illustration.Description))
+			pngPath := strings.TrimSuffix(outPath, filepath.Ext(outPath))
+			if err := os.WriteFile(outPath, data, 0o644); err != nil {
+				return err
+			} else {
+				if err := horde.Webp2PNG(outPath); err != nil {
+					return err
+				} else {
+					if err := os.Remove(outPath); err != nil {
+						return err
+					}
+				}
+			}
+			caption := fmt.Sprintf("%s:%s:%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
+			fields := fmt.Sprintf("\n  * Category: %s\n  * Description: %s\n  * Style: %s\n", amap(illustration.IsMap), illustration.Description, illustration.Style)
+			captionFile := fmt.Sprintf(" - [%s](%s) `%s`\n", caption, pngPath, fields)
+			illustrations += captionFile
+			indexString2 := fmt.Sprintf("%02d", index2+2)
+			if err := os.WriteFile(filepath.Join(dir, indexString2+"_Illustration.md"), []byte(captionFile), 0o644); err != nil {
+				return err
+			}
+		}
+		if err := os.WriteFile(filepath.Join(dir, "00_Illustrations.md"), []byte(illustrations), 0o644); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func GenerateCoversFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
+	for index2, illustration := range adventure.Covers {
+		prompt := fmt.Sprintf("%s\n%s\n%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
+		data, err := client.ImageGenerate(prompt, 30, 0, 0, "")
+		if err != nil {
+			return err
+		}
+		os.MkdirAll(path, 0o755)
+		outPath := filepath.Join(path, filenamer(illustration.Description))
+		pngPath := strings.TrimSuffix(outPath, filepath.Ext(outPath))
+		if err := os.WriteFile(outPath, data, 0o644); err != nil {
+			return err
+		} else {
+			if err := horde.Webp2PNG(outPath); err != nil {
+				return err
+			} else {
+				if err := os.Remove(outPath); err != nil {
+					return err
+				}
+			}
+		}
+		caption := fmt.Sprintf("%s:%s:%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
+		fields := fmt.Sprintf("\n  * Category: %s\n  * Description: %s\n  * Style: %s\n", amap(illustration.IsMap), illustration.Description, illustration.Style)
+		captionFile := fmt.Sprintf(" - [%s](%s) `%s`\n", caption, pngPath, fields)
+		indexString2 := fmt.Sprintf("%02d", index2)
+		if err := os.WriteFile(filepath.Join(path, indexString2+"_CoverIllustration.md"), []byte(captionFile), 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func filenamer(desc string) string {
+	split := strings.Split(desc, " ")
+	result := ""
+	for _, str := range split {
+		result += string(str[0])
+	}
+	return result + ".webp"
 }

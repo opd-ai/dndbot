@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -47,11 +46,11 @@ func main() {
 		}
 	}
 	if *balance {
-		bal, err := client.GetAccountBalance(context.Background())
+		/*bal, err := client.GetAccountBalance(context.Background())
 		if err != nil {
 			panic(err)
-		}
-		fmt.Println(bal)
+		}*/
+		fmt.Println("This very obvious feature of the anthropic API does not exist yet.")
 		os.Exit(0)
 	}
 	// Process the adventure
