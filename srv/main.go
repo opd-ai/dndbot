@@ -44,7 +44,7 @@ func main() {
 		}
 	} else {
 		var err error
-		listener, err = net.Listen("tcp", "localhost:3000")
+		listener, err = net.Listen("tcp", "localhost:")
 		if err != nil {
 			log.Fatal(err)
 		}
