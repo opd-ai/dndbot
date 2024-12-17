@@ -68,6 +68,10 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("X-Session-Id", sessionID)
+	if ui.historyCheck(sessionID) {
+		w.Write([]byte(""))
+		return
+	}
 
 	// Create progress object
 	progress := &generator.GenerationProgress{

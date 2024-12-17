@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"github.com/google/uuid"
 	"github.com/patrickmn/go-cache"
 
@@ -255,6 +256,7 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Use(middleware.Logger)
 	ui.router.Use(middleware.Recoverer)
 	ui.router.Use(corsMiddleware)
+	ui.router.Use(httprate.LimitByIP(120, time.Minute))
 
 	// Session management middleware
 	ui.router.Use(func(next http.Handler) http.Handler {

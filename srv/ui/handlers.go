@@ -76,6 +76,19 @@ func (ui *GeneratorUI) handleGetMessages(w http.ResponseWriter, r *http.Request)
 	w.Write([]byte(messages))
 }
 
+// one adventure per session
+func (ui *GeneratorUI) historyCheck(sessionID string) bool {
+	ui.sessionsM.RLock()
+	history, exists := ui.msgHistory[sessionID]
+	ui.sessionsM.RUnlock()
+
+	if !exists {
+		return false
+	}
+
+	return len(history.GetMessages()) > 0
+}
+
 // handleCheckSession validates and checks the existence of a session.
 //
 // Parameters:
