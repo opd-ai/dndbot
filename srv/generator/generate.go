@@ -20,7 +20,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 	hordeClient := horde.NewClient(os.Getenv("HORDE_API_KEY"))
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Minute)
 	defer cancel()
 
 	// Initialize adventure structure
