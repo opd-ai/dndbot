@@ -50,7 +50,7 @@ func SaveToFiles(adventure *Adventure, outputDir string) error {
 
 		// Save illustration prompts
 		for j, illus := range episode.Illustrations {
-			illusPath := filepath.Join(episodeDir, fmt.Sprintf("Caption_%02d.md", j+1))
+			illusPath := filepath.Join(episodeDir, fmt.Sprintf("z_Caption_%02d.md", j+1))
 			content := fmt.Sprintf("Description: %s\nStyle: %s\nIs Map: %v",
 				illus.Description, illus.Style, illus.IsMap)
 			if err := ioutil.WriteFile(illusPath, []byte(content), 0o644); err != nil {
