@@ -16,6 +16,67 @@
     <script type="text/javascript" src="/static/client.js"></script>
     <script type="text/javascript" src="/static/qrcode.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .share-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px; /* Space between grid items */
+            list-style-type: none;
+            padding: 0;
+        }
+        .share-link {
+            padding: 10px; /* Padding for the badges */
+            border-radius: 12px; /* Rounded corners */
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            height: 40px; /* Fixed height for rectangular shape */
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center align text */
+        }
+        .facebook { background: #3b5998; }
+        .twitter { background: #1da1f2; }
+        .linkedin { background: #0077b5; }
+        .pinterest { background: #bd081c; }
+        .whatsapp { background: #25D366; }
+        .telegram { background: #0088cc; }
+        .reddit { background: #ff4500; }
+        .instagram { background: #c32aa3; }
+        .mastodon { background: #4c4c4c; }
+        .matrix { background: #00ff00; }
+        .nostr { background: #ffcc00; }
+        .email { background: #0077cc; } /* Blue background for email */
+        .copy-button {
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 12px; /* Rounded corners */
+            padding: 10px; /* Padding for the button */
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            height: 40px; /* Fixed height for rectangular shape */
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center align text */
+            grid-column: 1 / -1; /* Span across all columns */
+        }
+
+        .share-link:hover, .copy-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
     <div>
@@ -101,5 +162,54 @@
     </form>
     <div id="status-message"></div>
     <div id="output-area"></div>
+    <h2>Share this site</h2>
+    <ul class="share-links">
+        <li><a id="facebook" class="share-link facebook" href="#" target="_blank">Facebook</a></li>
+        <li><a id="twitter" class="share-link twitter" href="#" target="_blank">Twitter</a></li>
+        <li><a id="linkedin" class="share-link linkedin" href="#" target="_blank">LinkedIn</a></li>
+        <li><a id="pinterest" class="share-link pinterest" href="#" target="_blank">Pinterest</a></li>
+        <li><a id="whatsapp" class="share-link whatsapp" href="#" target="_blank">WhatsApp</a></li>
+        <li><a id="telegram" class="share-link telegram" href="#" target="_blank">Telegram</a></li>
+        <li><a id="reddit" class="share-link reddit" href="#" target="_blank">Reddit</a></li>
+        <li><a id="instagram" class="share-link instagram" href="#" target="_blank">Instagram</a></li>
+        <li><a id="mastodon" class="share-link mastodon" href="#" target="_blank">Mastodon</a></li>
+        <li><a id="matrix" class="share-link matrix" href="#" target="_blank">Matrix</a></li>
+        <li><a id="nostr" class="share-link nostr" href="#" target="_blank">Nostr</a></li>
+        <li><a id="email" class="share-link email" href="#">Email</a></li>
+        <li><button id="copyButton" class="copy-button">Copy Link</button></li>
+    </ul>
+
+    <script>
+        const domain = window.location.href; // Get the current page URL
+        const message = "Check out this great site!";
+        const hashtag = "MyWebsite";
+        const emailSubject = "Check this out!";
+        const emailBody = `I found this website that you might like: ${domain}`;
+
+        // Social Media Sharing Links
+        document.getElementById('facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(domain)}`;
+        document.getElementById('twitter').href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(domain)}&text=${encodeURIComponent(message)}&hashtags=${hashtag}`;
+        document.getElementById('linkedin').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(domain)}`;
+        document.getElementById('pinterest').href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(domain)}`;
+        document.getElementById('whatsapp').href = `https://wa.me/?text=${encodeURIComponent(domain)}`;
+        document.getElementById('telegram').href = `https://t.me/share/url?url=${encodeURIComponent(domain)}`;
+        document.getElementById('reddit').href = `https://www.reddit.com/submit?url=${encodeURIComponent(domain)}`;
+        document.getElementById('instagram').href = `https://www.instagram.com/?url=${encodeURIComponent(domain)}`;
+        document.getElementById('mastodon').href = `https://mastodon.social/share?text=${encodeURIComponent(domain)}`;
+        document.getElementById('matrix').href = `https://matrix.to/#/${encodeURIComponent(domain)}`;
+        document.getElementById('nostr').href = `https://nostr.com/share?url=${encodeURIComponent(domain)}`;
+        
+        // Email Sharing
+        document.getElementById('email').href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+        // Copy to Clipboard Functionality
+        document.getElementById('copyButton').onclick = function() {
+            navigator.clipboard.writeText(domain).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(err => {
+                console.error('Error copying link: ', err);
+            });
+        };
+    </script>
 </body>
 </html>
