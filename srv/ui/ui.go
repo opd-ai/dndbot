@@ -310,6 +310,8 @@ func (ui *GeneratorUI) setupRoutes() {
 	ui.router.Get("/favicon.ico", handleFavicon)
 	outputServer := http.FileServer(http.Dir("outputs"))
 	ui.router.Handle("/outputs/*", http.StripPrefix("/outputs/", outputServer))
+	archiveServer := http.FileServer(http.Dir("archive"))
+	ui.router.Handle("/archive/*", http.StripPrefix("/archive/", archiveServer))
 }
 
 // logRequest represents a time-ordered list of request timestamps
