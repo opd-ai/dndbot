@@ -72,7 +72,8 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("X-Session-Id", sessionID)
 	if ui.historyCheck(sessionID) {
-		w.Write([]byte(""))
+		log.Println("Generation already in progress")
+		w.Write([]byte("Generation already in progress"))
 		return
 	}
 

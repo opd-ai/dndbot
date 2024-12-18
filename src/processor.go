@@ -280,7 +280,7 @@ func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure
 func GenerateCoversFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
 	for index2, illustration := range adventure.Covers {
 		prompt := fmt.Sprintf("%s\n%s\n%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
-		data, err := client.ImageGenerate(prompt, 30, 0, 0, "")
+		data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL")
 		if err != nil {
 			return err
 		}

@@ -17,6 +17,7 @@ var (
 	tls     = flag.Bool("tls", false, "auto-generate TLS certificate")
 	mail    = flag.String("mail", "example@example.com", "")
 	domain  = flag.String("domain", "localhost", "")
+	port    = flag.String("port", "0", "")
 )
 
 func main() {
@@ -46,7 +47,7 @@ func main() {
 		}
 	} else {
 		var err error
-		listener, err = net.Listen("tcp", *domain+":")
+		listener, err = net.Listen("tcp", *domain+":"+*port)
 		if err != nil {
 			log.Fatal(err)
 		}

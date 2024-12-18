@@ -1,11 +1,15 @@
 .PHONY: build run clean
 
+-include config.mk
+
+args?=-port 3000
+
 build:
 	go build -o dndbotwww ./srv
 
 run: fmt build
 	killall dndbotwww; true
-	./dndbotwww
+	./dndbotwww $(args)
 
 clean:
 	rm -frv dndbot dndbotwww profile outputs payments paywallet tmp *.log

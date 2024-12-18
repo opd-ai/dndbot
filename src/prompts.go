@@ -17,7 +17,7 @@ func (c Adventure) getSettingDetails() string {
 		return ""
 	}*/
 	val += c.Setting
-	val += "END SETTING DETAILS\n"
+	val += "\nEND SETTING DETAILS\n"
 	val += "```\n"
 	return val
 }
@@ -31,7 +31,7 @@ func (c Adventure) getWritingStyleDetails() string {
 	}*/
 
 	val += c.Style
-	val += "END WRITING STYLE DETAILS\n"
+	val += "\nEND WRITING STYLE DETAILS\n"
 	val += "```\n"
 	return val
 }
