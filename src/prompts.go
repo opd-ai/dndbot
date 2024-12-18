@@ -1,16 +1,10 @@
 package dndbot
 
 import (
-	"os"
 	"strings"
 )
 
-var (
-	Setting = "PROMPT.md"
-	Style   = "STYLE.md"
-)
-
-func getSettingDetails() string {
+func (c Adventure) getSettingDetails() string {
 	val := `
 	This adventure takes place in an established campaign setting.
 	For details about the campaign setting, refer to the following details.
@@ -18,30 +12,31 @@ func getSettingDetails() string {
 	`
 	val += "```\n"
 	val += "BEGIN SETTING DETAILS\n"
-	bytes, err := os.ReadFile(Setting)
+	/*bytes, err := os.ReadFile(c.Setting)
 	if err != nil {
 		return ""
-	}
-	val += string(bytes)
+	}*/
+	val += c.Setting
 	val += "END SETTING DETAILS\n"
 	val += "```\n"
 	return val
 }
 
-func getWritingStyleDetails() string {
+func (c Adventure) getWritingStyleDetails() string {
 	val := "\n```\n"
 	val += "BEGIN WRITING STYLE DETAILS\n"
-	bytes, err := os.ReadFile(Style)
+	/*bytes, err := os.ReadFile(c.Style)
 	if err != nil {
 		return ""
-	}
-	val += string(bytes)
-	val += "END SETTING DETAILS\n"
+	}*/
+
+	val += c.Style
+	val += "END WRITING STYLE DETAILS\n"
 	val += "```\n"
 	return val
 }
 
-func GetOnePageDungeonPrompt() string {
+func GetOnePageDungeonPrompt(settingDetails string) string {
 	return `Convert this episode summary into a one-page dungeon format(about 80 lines) following these guidelines:
     1. Start with a clear location description
     2. List key NPCs and their motivations
@@ -65,10 +60,10 @@ func GetOnePageDungeonPrompt() string {
 	Fantasy is acceptable, but avoiding material circumstances is not.
 	Avoid overt flights of fancy.
 	Maintain verisimiliture throughout the story.
-	` + getSettingDetails()
+	` + settingDetails
 }
 
-func GetExpandedAdventurePrompt() string {
+func GetExpandedAdventurePrompt(settingDetails string) string {
 	return `Expand this one-page dungeon into a detailed 8 page adventure(about 600 lines) including:
     1. Detailed background and hook
     2. Complete location descriptions
@@ -101,7 +96,7 @@ func GetExpandedAdventurePrompt() string {
 	At the bottom of each page except the final page, add [continued on next page].
 	On the last page, add [final page].
 	Never refer to yourself.
-	` + getSettingDetails()
+	` + settingDetails
 }
 
 func GetIllustrationPrompt() string {

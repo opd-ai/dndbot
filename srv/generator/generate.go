@@ -15,7 +15,7 @@ import (
 	// util "github.com/opd-ai/dndbot/srv/util"
 )
 
-func GenerateAdventure(progress *GenerationProgress, prompt string) error {
+func GenerateAdventure(progress *GenerationProgress, prompt, setting, style string) error {
 	client := dndbot.NewClaudeClient(os.Getenv("CLAUDE_API_KEY"))
 	hordeClient := horde.NewClient(os.Getenv("HORDE_API_KEY"))
 
@@ -37,7 +37,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt string) error {
 				log.Println("Generating table of Contents")
 				progress.UpdateOutput("🎲 Generating table of contents...")
 				var err error
-				adventure, err = dndbot.GenerateTableOfContents(client, prompt, progress)
+				adventure, err = dndbot.GenerateTableOfContents(client, prompt, progress, setting, style)
 				return err
 			},
 		},

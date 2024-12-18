@@ -96,7 +96,7 @@ class DndApiClient {
         return sessionId;
     }
 
-    async generateAdventure(prompt) {
+    async generateAdventure(prompt, setting, style) {
         this.logger.info('Generating adventure', { prompt });
         try {
             const response = await fetch(`${this.baseUrl}generate`, {
@@ -106,7 +106,7 @@ class DndApiClient {
                     'X-Session-Id': this.sessionId
                 },
                 credentials: 'include',
-                body: `prompt=${encodeURIComponent(prompt)}`
+                body: `prompt=${encodeURIComponent(prompt)}&setting=${encodeURIComponent(setting)}&style=${encodeURIComponent(style)}`
             });
 
             this.logger.debug('Generation response received', {
@@ -172,6 +172,8 @@ class DndGeneratorUI {
         this.elements = {
             form: document.getElementById('generator-form'),
             prompt: document.getElementById('prompt-input'),
+            setting: document.getElementById('setting-input'),
+            style: document.getElementById('style-input'),
             output: document.getElementById('output-area'),
             status: document.getElementById('status-message')
         };
@@ -195,6 +197,8 @@ class DndGeneratorUI {
     async handleSubmit(event) {
         event.preventDefault();
         const prompt = this.elements.prompt.value.trim();
+        const setting = this.elements.setting.value.trim();
+        const style = this.elements.style.value.trim();
         this.logger.info('Form submitted', { promptLength: prompt.length });
 
         if (!prompt) {
@@ -209,7 +213,7 @@ class DndGeneratorUI {
             this.stopPolling();
             
             this.logger.debug('Starting adventure generation');
-            const result = await this.apiClient.generateAdventure(prompt);
+            const result = await this.apiClient.generateAdventure(prompt, setting, style);
             this.updateOutput(result);
             
             // Reset polling state and start fresh

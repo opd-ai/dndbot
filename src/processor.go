@@ -10,7 +10,7 @@ import (
 	"github.com/opd-ai/horde"
 )
 
-func GenerateTableOfContents(client *ClaudeClient, prompt string, p progressor) (Adventure, error) {
+func GenerateTableOfContents(client *ClaudeClient, prompt string, p progressor, setting, style string) (Adventure, error) {
 	var pr progressor
 	if p != nil {
 		pr = p
@@ -49,7 +49,14 @@ Characters: Character One, Character Two, Characther Three... (All one line)
 
 `
 	systemPrompt += "```\n"
-	systemPrompt += getSettingDetails()
+
+	adventure := Adventure{
+		OriginalPrompt: prompt,
+		Setting:        setting,
+		Style:          style,
+	}
+
+	systemPrompt += adventure.getSettingDetails()
 
 	response, err := client.SendMessage(systemPrompt, "This is the story prompt, it is very important that you follow this prompt:"+prompt)
 	if err != nil {
@@ -59,10 +66,7 @@ Characters: Character One, Character Two, Characther Three... (All one line)
 	pr.UpdateOutput(response)
 
 	// Parse the response into Adventure struct
-	adventure := Adventure{
-		OriginalPrompt:  prompt,
-		TableOfContents: response,
-	}
+	adventure.TableOfContents = response
 
 	// Parse episodes from the response
 	adventure.Episodes = parseEpisodes(response)
@@ -80,7 +84,7 @@ func GenerateOnePageDungeons(client *ClaudeClient, adventure *Adventure) error {
 		}
 		prompt += fmt.Sprintf("The original prompt provided by a human for this story arc was: \n%s\n", adventure.OriginalPrompt)
 
-		response, err := client.SendMessage(GetOnePageDungeonPrompt(), prompt)
+		response, err := client.SendMessage(GetOnePageDungeonPrompt(adventure.getSettingDetails()), prompt)
 		if err != nil {
 			return fmt.Errorf("generating one-page dungeon for episode %d: %w", i, err)
 		}
@@ -131,7 +135,7 @@ func ExpandAdventures(client *ClaudeClient, adventure *Adventure, p progressor) 
 			msgUpd := fmt.Sprintf("Working on: %s section %d", adventure.Episodes[i].Title, index)
 			pr.UpdateOutput(msgUpd)
 			index++
-			response, err := client.SendMessage(GetExpandedAdventurePrompt()+getWritingStyleDetails(), currentPrompt)
+			response, err := client.SendMessage(GetExpandedAdventurePrompt(adventure.getWritingStyleDetails()), currentPrompt)
 			if err != nil {
 				return fmt.Errorf("expanding episode %d: %w", i, err)
 			}

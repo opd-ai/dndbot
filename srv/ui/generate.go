@@ -47,6 +47,9 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	setting := r.FormValue("setting")
+	style := r.FormValue("style")
+
 	// Create new session
 	sessionID := r.Header.Get("X-Session-Id")
 	if sessionID == "" {
@@ -94,7 +97,7 @@ func (ui *GeneratorUI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	// Start generation immediately, don't wait for WebSocket
 	go func() {
 		log.Printf("[Session %s] Starting generation", sessionID)
-		if err := generator.GenerateAdventure(progress, prompt); err != nil {
+		if err := generator.GenerateAdventure(progress, prompt, setting, style); err != nil {
 			log.Printf("[Session %s] Generation error: %v", sessionID, err)
 			progress.UpdateState(generator.StateError)
 			progress.SendUpdate(fmt.Sprintf("Error: %v", err))

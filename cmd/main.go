@@ -54,7 +54,7 @@ func main() {
 		os.Exit(0)
 	}
 	// Process the adventure
-	adventure, err := dndbot.GenerateTableOfContents(client, prompt, nil)
+	adventure, err := dndbot.GenerateTableOfContents(client, prompt, nil, "SETTING.md", "STYLE.md")
 	if err != nil {
 		fmt.Printf("Error generating table of contents: %v\n", err)
 		os.Exit(1)

@@ -9,6 +9,11 @@ import (
 )
 
 func SaveToFiles(adventure *Adventure, outputDir string) error {
+	top := filepath.Join(outputDir, "Prompt.md")
+	output := fmt.Sprintf("# Title: %s\n\n ## Original Prompt: %s\n\n ### Campaign Setting Prompt: %s\n\n ### Style Prompt %s\n", adventure.Title, adventure.OriginalPrompt, adventure.getSettingDetails(), adventure.getWritingStyleDetails())
+	if err := ioutil.WriteFile(top, []byte(adventure.TableOfContents), 0o644); err != nil {
+		return fmt.Errorf("saving episode: %w", err)
+	}
 	contentPath := filepath.Join(outputDir, "00_Contents")
 	if err := os.MkdirAll(contentPath, 0o755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
