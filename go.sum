@@ -13,6 +13,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/decred/dcrd/crypto/blake256 v1.0.0/go.mod h1:sQl2p6Y26YV+ZOcSTP6thNdn47hh8kt6rqSlvmrXFAc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 h1:YLtO71vCjJRCBcrPMtQ9nqBsqpA1m5sE92cU+pd5Mcc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1/go.mod h1:hyedUtir6IdtD/7lIxGeCxkaw7y45JueMRL4DIyJDKs=
+github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 h1:rpfIENRNNilwHwZeG5+P150SMrnNEcHYvcCuK6dPZSg=
+github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0/go.mod h1:v57UDF4pDQJcEfFUCRop3lJL149eHGSe9Jvczhzjo/0=
 github.com/go-chi/chi v1.5.5 h1:vOB/HbEMt9QqBqErz07QehcOKHaWFtuj87tTDVz2qXE=
 github.com/go-chi/chi v1.5.5/go.mod h1:C9JqLr3tIYjDOZpzn+BCuxY8z8vmca43EeMgyZt7irw=
 github.com/go-chi/chi/v5 v5.2.0 h1:Aj1EtB0qR2Rdo2dG4O94RIU35w2lvQSj6BRA4+qwFL0=
@@ -25,6 +27,8 @@ github.com/opd-ai/horde v0.0.0-20241217021146-e2e04bebe95d h1:kx7WxMU7XmMUVo8Kr9
 github.com/opd-ai/horde v0.0.0-20241217021146-e2e04bebe95d/go.mod h1:hXiw7xqk2riBqR45c2Zqgn0NLriNTtPw4vI3Ez5t1mw=
 github.com/opd-ai/paywall v0.0.0-20241216035356-7f4471c19ac1 h1:0dPF0kvT2Nmf7PZZRoK/usi+0CkAzWbhZhFuRoEiYWQ=
 github.com/opd-ai/paywall v0.0.0-20241216035356-7f4471c19ac1/go.mod h1:4QLuxjKYQAA2gpDQtrNEtpKT1TCWgPK5isCJDQwq5eE=
+github.com/opd-ai/paywall v0.0.0-20241218193024-4f4d2ea6bac2 h1:++UdP2bjAy1orev7yJkRXxjCrgeStXGx55Kgt93N3/s=
+github.com/opd-ai/paywall v0.0.0-20241218193024-4f4d2ea6bac2/go.mod h1:4QLuxjKYQAA2gpDQtrNEtpKT1TCWgPK5isCJDQwq5eE=
 github.com/opd-ai/wileedot v0.0.0-20241217172720-521d4175e624 h1:FXCTQV93+31Yj46zpYbd41es+EYgT7qi4RK6KSVrGQM=
 github.com/opd-ai/wileedot v0.0.0-20241217172720-521d4175e624/go.mod h1:ftKSvvGC9FnxZeuL3B4MB6q/DOzVSV0kET08YUyDwbM=
 github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
