@@ -261,8 +261,9 @@ func hstsMiddleware(next http.Handler) http.Handler {
 // - API endpoints
 func (ui *GeneratorUI) setupRoutes() {
 	csp := &secure.CSP{
-		Value: `default-src 'self'; script-src 'self' {{nonce}} 'sha256-6O8L648x8Xhmzia0qI/zQdbTlpVaGehLozFzz/i2dIE=' 'sha256-EekPIHyJRz0hoIvCnNHdTpzW+jhqMbyTyTu2nXJO7b0=' 'sha256-UI0Byo+Bdsa/9HfswzVRrNuMaEt5s26sucqVpf8iPxw=' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;`,
+		Value: `default-src 'self'; script-src 'self' {{nonce}} 'sha256-6O8L648x8Xhmzia0qI/zQdbTlpVaGehLozFzz/i2dIE=' 'sha256-EekPIHyJRz0hoIvCnNHdTpzW+jhqMbyTyTu2nXJO7b0=' 'sha256-UI0Byo+Bdsa/9HfswzVRrNuMaEt5s26sucqVpf8iPxw=' 'sha256-61RzUnEfEIq/j80eD9kxIi6+FHZECO1+ZjF5aAkRgcI=' 'sha256-2j5Uk7r3oOJ3KJIcT7QE7NrJ0DmojlDl0qjjoQbPsz8=' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;`,
 	}
+	log.Println("csp", csp)
 	// r := chi.NewRouter()
 
 	// Apply middleware
@@ -275,7 +276,7 @@ func (ui *GeneratorUI) setupRoutes() {
 		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 	))
 	ui.router.Use(hstsMiddleware)
-	ui.router.Use(csp.Middleware())
+	// ui.router.Use(csp.Middleware())
 
 	// Session management middleware
 	ui.router.Use(func(next http.Handler) http.Handler {
