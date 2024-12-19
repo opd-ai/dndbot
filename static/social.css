@@ -1,0 +1,59 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+.share-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px; /* Space between grid items */
+    list-style-type: none;
+    padding: 0;
+}
+.share-link {
+    padding: 10px; /* Padding for the badges */
+    border-radius: 12px; /* Rounded corners */
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 40px; /* Fixed height for rectangular shape */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center align text */
+}
+.facebook { background: #3b5998; }
+.twitter { background: #1da1f2; }
+.linkedin { background: #0077b5; }
+.pinterest { background: #bd081c; }
+.whatsapp { background: #25D366; }
+.telegram { background: #0088cc; }
+.reddit { background: #ff4500; }
+.instagram { background: #c32aa3; }
+.mastodon { background: #4c4c4c; }
+.matrix { background: #00ff00; }
+.nostr { background: #ffcc00; }
+.email { background: #0077cc; } /* Blue background for email */
+.copy-button {
+    background: #555;
+    color: white;
+    border: none;
+    border-radius: 12px; /* Rounded corners */
+    padding: 10px; /* Padding for the button */
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 40px; /* Fixed height for rectangular shape */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center align text */
+    grid-column: 1 / -1; /* Span across all columns */
+}
+
+.share-link:hover, .copy-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}

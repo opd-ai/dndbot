@@ -12,6 +12,7 @@ require (
 	github.com/opd-ai/paywall v0.0.0-20241218193024-4f4d2ea6bac2
 	github.com/opd-ai/wileedot v0.0.0-20241217172720-521d4175e624
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/srikrsna/security-headers v2.1.0+incompatible
 )
 
 require (

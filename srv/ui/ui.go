@@ -19,6 +19,8 @@ import (
 
 	"github.com/opd-ai/dndbot/srv/generator"
 	"github.com/opd-ai/paywall"
+
+	secure "github.com/srikrsna/security-headers"
 )
 
 // GeneratorUI manages the web interface for the DND adventure generator.
@@ -258,6 +260,9 @@ func hstsMiddleware(next http.Handler) http.Handler {
 // - Static file serving
 // - API endpoints
 func (ui *GeneratorUI) setupRoutes() {
+	csp := &secure.CSP{
+		Value: `default-src 'self'; object-src 'self'; script-src {{nonce}} 'strict-dynamic' 'self'; base-uri 'self';`,
+	}
 	// r := chi.NewRouter()
 
 	// Apply middleware
@@ -270,6 +275,7 @@ func (ui *GeneratorUI) setupRoutes() {
 		httprate.WithKeyFuncs(httprate.KeyByIP, httprate.KeyByEndpoint),
 	))
 	ui.router.Use(hstsMiddleware)
+	ui.router.Use(csp.Middleware())
 
 	// Session management middleware
 	ui.router.Use(func(next http.Handler) http.Handler {
