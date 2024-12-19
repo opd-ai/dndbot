@@ -233,6 +233,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, HX-Request, HX-Current-URL")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Expose-Headers", "X-Session-Id")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
