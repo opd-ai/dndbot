@@ -26,7 +26,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt, setting, style stri
 	}
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	defer cancel()
 
 	// Initialize adventure structure
