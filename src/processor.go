@@ -10,7 +10,7 @@ import (
 	"github.com/opd-ai/horde"
 )
 
-func GenerateTableOfContents(client *ClaudeClient, prompt string, p progressor, setting, style string) (Adventure, error) {
+func GenerateTableOfContents(client Client, prompt string, p progressor, setting, style string) (Adventure, error) {
 	var pr progressor
 	if p != nil {
 		pr = p
@@ -74,7 +74,7 @@ Characters: Character One, Character Two, Characther Three... (All one line)
 	return adventure, nil
 }
 
-func GenerateOnePageDungeons(client *ClaudeClient, adventure *Adventure) error {
+func GenerateOnePageDungeons(client Client, adventure *Adventure) error {
 	for i := range adventure.Episodes {
 		prompt := fmt.Sprintf("Expand this episode description into a one-page dungeon format:\n%s\n",
 			adventure.Episodes[i].Text())
@@ -108,7 +108,7 @@ func (n nullProgressor) UpdateOutput(message string) {
 	return
 }
 
-func ExpandAdventures(client *ClaudeClient, adventure *Adventure, p progressor) error {
+func ExpandAdventures(client Client, adventure *Adventure, p progressor) error {
 	var pr progressor
 	if p != nil {
 		pr = p
@@ -163,7 +163,7 @@ func ExpandAdventures(client *ClaudeClient, adventure *Adventure, p progressor) 
 	return nil
 }
 
-func GenerateIllustrationPrompts(client *ClaudeClient, adventure *Adventure) error {
+func GenerateIllustrationPrompts(client Client, adventure *Adventure) error {
 	for i := range adventure.Episodes {
 		prompt := fmt.Sprintf("Generate illustration prompts for this adventure:\n%s\n",
 			adventure.Episodes[i].FullAdventure)
@@ -181,7 +181,7 @@ func GenerateIllustrationPrompts(client *ClaudeClient, adventure *Adventure) err
 	return nil
 }
 
-func GenerateCoverPrompts(client *ClaudeClient, adventure *Adventure) error {
+func GenerateCoverPrompts(client Client, adventure *Adventure) error {
 	for i := range adventure.Episodes {
 		prompt := fmt.Sprintf("Generate cover illustration prompts for this adventure:\n%s\n",
 			adventure.TableOfContents)
@@ -199,7 +199,7 @@ func GenerateCoverPrompts(client *ClaudeClient, adventure *Adventure) error {
 	return nil
 }
 
-func RemoveCopyrightedMaterial(client *ClaudeClient, adventure *Adventure) error {
+func RemoveCopyrightedMaterial(client Client, adventure *Adventure) error {
 	for i := range adventure.Episodes {
 		// Build initial prompt
 		prompt := fmt.Sprintf("Remove any copyrighted material from this adventure:\n%s",
