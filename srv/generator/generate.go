@@ -11,13 +11,19 @@ import (
 	"time"
 
 	dndbot "github.com/opd-ai/dndbot/src"
-	"github.com/opd-ai/horde"
 	// util "github.com/opd-ai/dndbot/srv/util"
 )
 
 func GenerateAdventure(progress *GenerationProgress, prompt, setting, style string) error {
 	client := dndbot.NewClaudeClient(os.Getenv("CLAUDE_API_KEY"))
-	hordeClient := horde.NewClient(os.Getenv("HORDE_API_KEY"))
+	var imageClient dndbot.ImageClient
+	if os.Getenv("SD_WEBUI_URL") != "" {
+		progress.UpdateOutput("Local SD-Webui detected, image generation will probably be faster")
+		imageClient = &dndbot.LocalClient{}
+	} else {
+		progress.UpdateOutput("Using Stable Horde, speed will be limited by availability")
+		imageClient = dndbot.NewHordeClient()
+	}
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Minute)
@@ -62,7 +68,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt, setting, style stri
 			function: func() error {
 				log.Println("Generating actual covers")
 				progress.UpdateOutput("Generating actual covers...")
-				return dndbot.GenerateCoversFromPrompts(hordeClient, &adventure, filepath.Join("outputs", progress.SessionID, "00_Contents"))
+				return dndbot.GenerateCoversFromPrompts(imageClient, &adventure, filepath.Join("outputs", progress.SessionID, "00_Contents"), progress)
 			},
 		},
 		{
@@ -110,7 +116,7 @@ func GenerateAdventure(progress *GenerationProgress, prompt, setting, style stri
 			function: func() error {
 				log.Println("Generating actual illustrations")
 				progress.UpdateOutput("Generating actual illustrations...")
-				return dndbot.GenerateIllustrationsFromPrompts(hordeClient, &adventure, filepath.Join("outputs", progress.SessionID))
+				return dndbot.GenerateIllustrationsFromPrompts(imageClient, &adventure, filepath.Join("outputs", progress.SessionID), progress)
 			},
 		},
 		{

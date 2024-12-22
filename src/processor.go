@@ -241,13 +241,20 @@ func amap(s bool) string {
 	return "Illustration"
 }
 
-func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
+func GenerateIllustrationsFromPrompts(client ImageClient, adventure *Adventure, path string, progress progressor) error {
+	var pr progressor
+	if progress != nil {
+		pr = progress
+	} else {
+		pr = &nullProgressor{}
+	}
 	for index, episode := range adventure.Episodes {
 		indexString := fmt.Sprintf("%02d", index+1)
 		dir := filepath.Join(path, indexString+"_Episode")
 		for index2, illustration := range episode.Illustrations {
 			prompt := fmt.Sprintf("%s\n%s\n%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
-			data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL")
+			pr.UpdateOutput("Generating illustration image by prompting SDXL(This will take a while): " + prompt)
+			data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL", progress)
 			if err != nil {
 				return err
 			}
@@ -257,11 +264,13 @@ func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure
 			if err := os.WriteFile(outPath, data, 0o644); err != nil {
 				return err
 			} else {
-				if err := horde.Webp2PNG(outPath); err != nil {
-					return err
-				} else {
-					if err := os.Remove(outPath); err != nil {
+				if os.Getenv("SD_WEBUI_URL") == "" {
+					if err := horde.Webp2PNG(outPath); err != nil {
 						return err
+					} else {
+						if err := os.Remove(outPath); err != nil {
+							return err
+						}
 					}
 				}
 			}
@@ -272,15 +281,23 @@ func GenerateIllustrationsFromPrompts(client *horde.Client, adventure *Adventure
 			if err := os.WriteFile(filepath.Join(dir, indexString2+"_Illustration.md"), []byte(captionFile), 0o644); err != nil {
 				return err
 			}
+			pr.UpdateOutput("Generated illustration image. Proceeding...\n")
 		}
 	}
 	return nil
 }
 
-func GenerateCoversFromPrompts(client *horde.Client, adventure *Adventure, path string) error {
+func GenerateCoversFromPrompts(client ImageClient, adventure *Adventure, path string, progress progressor) error {
+	var pr progressor
+	if progress != nil {
+		pr = progress
+	} else {
+		pr = &nullProgressor{}
+	}
 	for index2, illustration := range adventure.Covers {
 		prompt := fmt.Sprintf("%s\n%s\n%s", amap(illustration.IsMap), illustration.Description, illustration.Style)
-		data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL")
+		pr.UpdateOutput("Generating cover image by prompting SDXL(This will take a while): " + prompt)
+		data, err := client.ImageGenerate(prompt, 30, 0, 0, "Dreamshaper XL", progress)
 		if err != nil {
 			return err
 		}
@@ -290,11 +307,13 @@ func GenerateCoversFromPrompts(client *horde.Client, adventure *Adventure, path 
 		if err := os.WriteFile(outPath, data, 0o644); err != nil {
 			return err
 		} else {
-			if err := horde.Webp2PNG(outPath); err != nil {
-				return err
-			} else {
-				if err := os.Remove(outPath); err != nil {
+			if os.Getenv("SD_WEBUI_URL") == "" {
+				if err := horde.Webp2PNG(outPath); err != nil {
 					return err
+				} else {
+					if err := os.Remove(outPath); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -305,6 +324,7 @@ func GenerateCoversFromPrompts(client *horde.Client, adventure *Adventure, path 
 		if err := os.WriteFile(filepath.Join(path, indexString2+"_CoverIllustration.md"), []byte(captionFile), 0o644); err != nil {
 			return err
 		}
+		pr.UpdateOutput("Generated cover image. Proceeding...\n")
 	}
 	return nil
 }
