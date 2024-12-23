@@ -7,6 +7,9 @@ args?=-port 3000
 build:
 	go build -o dndbotwww ./srv
 
+book: build
+	./book
+
 run: fmt build
 	killall dndbotwww; true
 	./dndbotwww $(args)
@@ -29,4 +32,5 @@ docker:
 	docker build -t dndbot .
 
 docker-run:
-	docker run -e CLAUDE_API_KEY=$(CLAUDE_API_KEY) -e HORDE_API_KEY=$(HORDE_API_KEY) --restart=always --cap-drop=SETUID --cap-drop=NET_BIND_SERVICE --publish 443:443 --publish 80:80 --name dndbot dndbot
+	docker run -e CLAUDE_API_KEY=$(CLAUDE_API_KEY) -e HORDE_API_KEY=$(HORDE_API_KEY) --restart=always --cap-drop=SETUID --cap-drop=NET_BIND_SERVICE --publish 443:443 --publish 80:80 --name dndbot dndbotbookcompiler/book.go
+

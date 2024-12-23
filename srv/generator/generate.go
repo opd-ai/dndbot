@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/opd-ai/bookie"
 	dndbot "github.com/opd-ai/dndbot/src"
 	// util "github.com/opd-ai/dndbot/srv/util"
 )
@@ -133,6 +134,14 @@ func GenerateAdventure(progress *GenerationProgress, prompt, setting, style stri
 				log.Println("Save adventure files")
 				progress.UpdateOutput("💾 Saving adventure files...")
 				return dndbot.SaveToFiles(&adventure, filepath.Join("outputs", progress.SessionID))
+			},
+		},
+		{
+			name: "Generating PDF Book",
+			function: func() error {
+				log.Println("Generating PDF version")
+				progress.UpdateOutput("💾 Generating PDF version...")
+				return bookie.DirectoryToPDFFile(filepath.Join("outputs", progress.SessionID), filepath.Join("outputs", progress.SessionID, "adventure.pdf"))
 			},
 		},
 		{
