@@ -3,6 +3,7 @@ package bookcompiler
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -23,7 +24,15 @@ func (bc *BookCompiler) renderChildren(n *html.Node) error {
 	return nil
 }
 
+// render.go
 func (bc *BookCompiler) renderHTML(n *html.Node) error {
+	// Add debug logging
+	if n.Type == html.ElementNode {
+		log.Printf("Rendering element: %s", n.Data)
+	} else if n.Type == html.TextNode {
+		log.Printf("Rendering text: %s", bc.cleanText(n.Data))
+	}
+
 	// Save current text state
 	currentStyle := TextStyle{
 		FontFamily: bc.textFont,

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -56,12 +55,14 @@ func (bc *BookCompiler) Compile() error {
 	return bc.pdf.OutputFileAndClose(bc.OutputPath)
 }
 
+// compile.go
 func (bc *BookCompiler) processChapter(chapter Chapter) error {
 	// Add chapter title
 	chapterName := filepath.Base(chapter.Path)
 	chapterName = strings.TrimPrefix(chapterName, "Episode")
 	chapterName = fmt.Sprintf("Episode %s", strings.TrimSpace(chapterName))
 
+	bc.pdf.AddPage() // Ensure we start on a new page
 	bc.pdf.SetFont(bc.chapterFont, "B", 24)
 	bc.pdf.Cell(0, 10, chapterName)
 	bc.pdf.Ln(20)
@@ -73,19 +74,35 @@ func (bc *BookCompiler) processChapter(chapter Chapter) error {
 			return fmt.Errorf("error reading file %s: %w", file, err)
 		}
 
-		// Convert markdown to HTML
-		htmlbytes := blackfriday.Run(content)
+		// Convert markdown to HTML with specific extensions
+		htmlbytes := blackfriday.Run(content,
+			blackfriday.WithExtensions(blackfriday.CommonExtensions))
 
 		// Parse HTML
 		doc, err := html.Parse(bytes.NewReader(htmlbytes))
 		if err != nil {
 			return fmt.Errorf("error parsing HTML: %w", err)
 		}
-		log.Printf("generated HTML: %s\n", htmlbytes)
 
-		// Render content
-		if err := bc.renderHTML(doc); err != nil {
-			return err
+		// Find the body node
+		var body *html.Node
+		var findBody func(*html.Node)
+		findBody = func(n *html.Node) {
+			if n.Type == html.ElementNode && n.Data == "body" {
+				body = n
+				return
+			}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				findBody(c)
+			}
+		}
+		findBody(doc)
+
+		if body != nil {
+			// Render the body content
+			if err := bc.renderChildren(body); err != nil {
+				return fmt.Errorf("error rendering content: %w", err)
+			}
 		}
 	}
 

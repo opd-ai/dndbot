@@ -142,7 +142,13 @@ func (bc *BookCompiler) SetToCTitle(title string) {
 	bc.tocTitle = title
 }
 
+// book.go
 func (bc *BookCompiler) cleanText(text string) string {
+	// More robust text cleaning
+	text = strings.ReplaceAll(text, "\n", " ") // Replace newlines with spaces
+	text = strings.ReplaceAll(text, "\t", " ") // Replace tabs with spaces
+	text = strings.TrimSpace(text)             // Remove extra whitespace
+
 	// Remove or replace problematic characters
 	text = strings.ReplaceAll(text, "ðŸ", "")  // Remove emoji placeholders
 	text = strings.ReplaceAll(text, `"`, "\"") // Replace smart quotes
@@ -150,5 +156,16 @@ func (bc *BookCompiler) cleanText(text string) string {
 	text = strings.ReplaceAll(text, "'", "'")
 	text = strings.ReplaceAll(text, "'", "'")
 	text = strings.ReplaceAll(text, "…", "...")
-	return text
+	text = strings.ReplaceAll(text, "–", "-") // Replace en-dash
+	text = strings.ReplaceAll(text, "—", "-") // Replace em-dash
+
+	// Remove any other non-printable characters
+	clean := strings.Map(func(r rune) rune {
+		if r < 32 || r >= 127 {
+			return -1
+		}
+		return r
+	}, text)
+
+	return clean
 }
