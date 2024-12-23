@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/russross/blackfriday/v2"
-	"golang.org/x/net/html"
 )
 
 // NewBookCompiler creates a new instance of BookCompiler
@@ -32,71 +31,6 @@ func NewBookCompiler(rootDir, outputPath string) *BookCompiler {
 	bc.tocLevels[3] = TextStyle{FontFamily: "Arial", Style: "", Size: 10}  // Subsections
 
 	return bc
-}
-
-func (bc *BookCompiler) renderNode(n *html.Node) error {
-	switch n.Type {
-	case html.TextNode:
-		if text := strings.TrimSpace(n.Data); text != "" {
-			// Clean the text before writing
-			cleanText := bc.cleanText(text)
-			bc.pdf.Write(5, cleanText)
-		}
-	case html.ElementNode:
-		switch n.Data {
-		case "h1":
-			bc.pdf.AddPage()
-			bc.pdf.SetFont(bc.chapterFont, "B", 24)
-			bc.renderChildren(n)
-			bc.pdf.Ln(20)
-		case "h2":
-			bc.pdf.Ln(15)
-			bc.pdf.SetFont(bc.chapterFont, "B", 18)
-			bc.renderChildren(n)
-			bc.pdf.Ln(10)
-		case "h3":
-			bc.pdf.Ln(10)
-			bc.pdf.SetFont(bc.chapterFont, "B", 14)
-			bc.renderChildren(n)
-			bc.pdf.Ln(8)
-		case "p":
-			bc.pdf.Ln(5)
-			bc.pdf.SetFont(bc.textFont, "", 12)
-			bc.renderChildren(n)
-			bc.pdf.Ln(5)
-		case "ul", "ol":
-			bc.pdf.Ln(3)
-			bc.renderChildren(n)
-			bc.pdf.Ln(3)
-		case "li":
-			bc.pdf.Write(5, "• ")
-			bc.renderChildren(n)
-			bc.pdf.Ln(3)
-		case "strong", "b":
-			bc.pdf.SetFont(bc.textFont, "B", 12)
-			bc.renderChildren(n)
-		case "em", "i":
-			bc.pdf.SetFont(bc.textFont, "I", 12)
-			bc.renderChildren(n)
-		case "code":
-			bc.pdf.SetFont("Courier", "", 10)
-			bc.renderChildren(n)
-		case "pre":
-			bc.pdf.Ln(5)
-			bc.pdf.SetFont("Courier", "", 10)
-			bc.renderChildren(n)
-			bc.pdf.Ln(5)
-		case "br":
-			bc.pdf.Ln(5)
-		default:
-			bc.renderChildren(n)
-		}
-
-		// Restore font settings
-		//bc.pdf.SetFont(currentFont, currentStyle, currentSize)
-	}
-
-	return nil
 }
 
 func (bc *BookCompiler) collectToCEntries() error {

@@ -91,11 +91,3 @@ func (bc *BookCompiler) processChapter(chapter Chapter) error {
 
 	return nil
 }
-
-func (bc *BookCompiler) updateToCPageNumbers(pageTracker map[string]int) {
-	for i := range bc.toc {
-		if page, ok := pageTracker[bc.toc[i].Title]; ok {
-			bc.toc[i].PageNum = page
-		}
-	}
-}

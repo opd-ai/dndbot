@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/russross/blackfriday/v2"
+	"golang.org/x/net/html"
 )
 
 // Helper function to extract text from markdown node
@@ -32,4 +33,48 @@ func extractEpisodeNumber(path string) int {
 		}
 	}
 	return 0
+}
+
+// Helper functions
+func findParent(n *html.Node, tag string) *html.Node {
+	for p := n.Parent; p != nil; p = p.Parent {
+		if p.Type == html.ElementNode && p.Data == tag {
+			return p
+		}
+	}
+	return nil
+}
+
+func countPreviousSiblings(n *html.Node) int {
+	count := 0
+	for s := n.PrevSibling; s != nil; s = s.PrevSibling {
+		if s.Type == html.ElementNode {
+			count++
+		}
+	}
+	return count
+}
+
+func getAttr(n *html.Node, key string) string {
+	for _, attr := range n.Attr {
+		if attr.Key == key {
+			return attr.Val
+		}
+	}
+	return ""
+}
+
+func getTextContent(n *html.Node) string {
+	var text strings.Builder
+	var extract func(*html.Node)
+	extract = func(n *html.Node) {
+		if n.Type == html.TextNode {
+			text.WriteString(n.Data)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			extract(c)
+		}
+	}
+	extract(n)
+	return text.String()
 }

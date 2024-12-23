@@ -33,9 +33,10 @@ type Chapter struct {
 	Files []string
 }
 
-// TextStyle holds formatting information
+// TextStyle holds current text formatting state
 type TextStyle struct {
 	FontFamily string
 	Style      string
 	Size       float64
+	Alignment  string
 }
