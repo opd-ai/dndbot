@@ -10,7 +10,7 @@ import (
 )
 
 type ClaudeClient struct {
-	client     *anthropic.Client
+	Client     *anthropic.Client
 	httpClient http.Client
 	apiKey     string
 }
@@ -20,7 +20,7 @@ func NewClaudeClient(apiKey string) *ClaudeClient {
 		option.WithAPIKey(apiKey),
 	)
 	return &ClaudeClient{
-		client: client,
+		Client: client,
 		apiKey: apiKey,
 	}
 }
@@ -31,7 +31,7 @@ func (c *ClaudeClient) SendMessage(systemPrompt, userPrompt string) (string, err
 	var message *anthropic.Message
 	for {
 		var err error
-		message, err = c.client.Messages.New(
+		message, err = c.Client.Messages.New(
 			ctx,
 			anthropic.MessageNewParams{
 				Model:     anthropic.F(anthropic.ModelClaude3_5SonnetLatest),
