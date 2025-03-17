@@ -15,6 +15,7 @@ run: fmt build
 	./dndbotwww $(args)
 
 clean:
+	mv paywallet ../paywallet.bak; true
 	rm -frv dndbot dndbotwww profile outputs payments paywallet tmp *.log
 
 fmt:
