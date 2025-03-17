@@ -306,7 +306,17 @@ func (ui *GeneratorUI) setupRoutes() {
 		})
 	})
 	var err error
-	ui.zoltar, err = paywall.ConstructPaywall("./paywallet")
+
+	ui.zoltar, err = paywall.NewPaywall(paywall.Config{
+		PriceInBTC:       0.0001, // 0.0001 BTC
+		TestNet:          false,
+		Store:            paywall.NewFileStore("./paywallet"), // Required for payment tracking
+		PaymentTimeout:   time.Hour * 24,
+		MinConfirmations: 1,
+		XMRUser:          "user", // XMR disabled for now
+		XMRPassword:      "password",
+		XMRRPC:           "http://localhost:18081/",
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
