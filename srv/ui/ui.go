@@ -306,7 +306,7 @@ func (ui *GeneratorUI) setupRoutes() {
 		})
 	})
 	var err error
-	ui.zoltar, err = paywall.ConstructPaywall()
+	ui.zoltar, err = paywall.ConstructPaywall("./paywallet")
 	if err != nil {
 		log.Fatal(err)
 	}
