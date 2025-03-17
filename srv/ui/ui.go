@@ -309,6 +309,7 @@ func (ui *GeneratorUI) setupRoutes() {
 
 	ui.zoltar, err = paywall.NewPaywall(paywall.Config{
 		PriceInBTC:       0.0001, // 0.0001 BTC
+		PriceInXMR:       0.0000, // 0.0001 XMR
 		TestNet:          false,
 		Store:            paywall.NewFileStore("./paywallet"), // Required for payment tracking
 		PaymentTimeout:   time.Hour * 24,
