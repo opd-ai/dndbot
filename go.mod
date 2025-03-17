@@ -1,8 +1,6 @@
 module github.com/opd-ai/dndbot
 
-go 1.23.0
-
-toolchain go1.23.2
+go 1.23.2
 
 require (
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.13
@@ -12,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/opd-ai/bookie v0.0.0-20241231151724-f92d22435b8c
 	github.com/opd-ai/horde v0.0.0-20241222040725-8bbabd49f795
-	github.com/opd-ai/paywall v0.0.0-20250311171923-aa5aa1730dea
+	github.com/opd-ai/paywall v0.0.1
 	github.com/opd-ai/wileedot v0.0.0-20241217172720-521d4175e624
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/srikrsna/security-headers v2.1.0+incompatible
